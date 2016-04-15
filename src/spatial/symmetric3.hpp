@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2014_2016 CNRS
+// Copyright (c) 2014-2016 CNRS
 //
 // This file is part of Pinocchio
 // Pinocchio is free software: you can redistribute it
@@ -229,7 +229,7 @@ namespace se3
 
     Symmetric3Tpl operator+(const Symmetric3Tpl & s2) const
     {
-      return Symmetric3Tpl((data_+s2.data_).eval());
+      return Symmetric3Tpl((data_+s2.data_));
     }
 
     Symmetric3Tpl & operator+=(const Symmetric3Tpl & s2)
@@ -296,7 +296,7 @@ namespace se3
 
     /* R*S*R' */
     template<typename D>
-    Symmetric3Tpl rotate(const Eigen::MatrixBase<D> & R) const
+    inline Symmetric3Tpl rotate(const Eigen::MatrixBase<D> & R) const
     {
       EIGEN_STATIC_ASSERT_MATRIX_SPECIFIC_SIZE(D,3,3);
       assert( (R.transpose()*R).isApprox(Matrix3::Identity()) );
@@ -317,17 +317,20 @@ namespace se3
       Sres.data_(5) = Y(1,0)*R(2,0) + Y(1,1)*R(2,1);
 
       // r=R' v ( 6m + 3a)
-      const Vector3 r(-R(0,0)*data_(4) + R(0,1)*data_(3),
-                      -R(1,0)*data_(4) + R(1,1)*data_(3),
-                      -R(2,0)*data_(4) + R(2,1)*data_(3));
+//      const Vector3 r(-R(0,0)*data_(4) + R(0,1)*data_(3),
+//                      -R(1,0)*data_(4) + R(1,1)*data_(3),
+//                      -R(2,0)*data_(4) + R(2,1)*data_(3));
 
       // Sres_11 (3a)
       Sres.data_(0) = L(0,0) + L(1,1) - Sres.data_(2) - Sres.data_(5);
 	
       // Sres + D + (Ev)x ( 9a)
       Sres.data_(0) += data_(5); 
-      Sres.data_(1) += r(2); Sres.data_(2)+= data_(5);
-      Sres.data_(3) +=-r(1); Sres.data_(4)+= r(0); Sres.data_(5) += data_(5);
+      Sres.data_(1) += -R(2,0)*data_(4) + R(2,1)*data_(3);
+      Sres.data_(2) += data_(5);
+      Sres.data_(3) -= -R(1,0)*data_(4) + R(1,1)*data_(3);
+      Sres.data_(4) += -R(0,0)*data_(4) + R(0,1)*data_(3);
+      Sres.data_(5) += data_(5);
 
       return Sres;
     }

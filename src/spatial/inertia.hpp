@@ -22,67 +22,111 @@
 #include <iostream>
 
 #include "pinocchio/spatial/symmetric3.hpp"
+#include "pinocchio/spatial/spatial.hpp"
 #include "pinocchio/spatial/force.hpp"
 #include "pinocchio/spatial/motion.hpp"
 #include "pinocchio/spatial/skew.hpp"
 
 namespace se3
 {
+  template<class Derived>
+  struct traits<InertiaBase <Derived> >
+  {
+    typedef Derived SE3ActionReturnType;
+  };
 
-  template< class Derived>
-  class InertiaBase
+  template<class Derived>
+  class InertiaBase : public SpatialBase<Derived>
   {
   protected:
 
-    typedef Derived  Derived_t;
-    SPATIAL_TYPEDEF_TEMPLATE(Derived_t);
+    SPATIAL_TYPEDEF_TEMPLATE(Derived);
 
   public:
-    Derived_t & derived() { return *static_cast<Derived_t*>(this); }
-    const Derived_t & derived() const { return *static_cast<const Derived_t*>(this); }
+    typedef SpatialBase<Derived> Base;
+    using Base::derived;
 
-    Scalar_t           mass()    const { return static_cast<const Derived_t*>(this)->mass(); }
-    Scalar_t &         mass() { return static_cast<const Derived_t*>(this)->mass(); }
-    const Vector3 &    lever()   const { return static_cast<const Derived_t*>(this)->lever(); }
-    Vector3 &          lever() { return static_cast<const Derived_t*>(this)->lever(); }
-    const Symmetric3 & inertia() const { return static_cast<const Derived_t*>(this)->inertia(); }
-    Symmetric3 &       inertia() { return static_cast<const Derived_t*>(this)->inertia(); }
+//    Scalar_t           mass()    const { return static_cast<const Derived*>(this)->mass(); }
+//    Scalar_t &         mass() { return static_cast<const Derived*>(this)->mass(); }
+//    const Vector3 &    lever()   const { return static_cast<const Derived*>(this)->lever(); }
+//    Vector3 &          lever() { return static_cast<const Derived*>(this)->lever(); }
+//    const Symmetric3 & inertia() const { return static_cast<const Derived*>(this)->inertia(); }
+//    Symmetric3 &       inertia() { return static_cast<const Derived*>(this)->inertia(); }
 
-    Matrix6 matrix() const { return derived().matrix_impl(); }
-    operator Matrix6 () const { return matrix(); }
+//    Matrix6 matrix() const { return derived().matrix_impl(); }
+//    operator Matrix6 () const { return matrix(); }
 
-    Derived_t& operator= (const Derived_t& clone){return derived().__equl__(clone);}
-    bool operator== (const Derived_t& other) const {return derived().isEqual(other);}
-    Derived_t& operator+= (const Derived_t & Yb) { return derived().__pequ__(Yb); }
-    Derived_t operator+(const Derived_t & Yb) const { return derived().__plus__(Yb); }
-    Force operator*(const Motion & v) const    { return derived().__mult__(v); }
+    template<typename OtherDerived>
+    inline bool operator== (const InertiaBase<OtherDerived> & other) const
+    {
+      return derived().isEqual(other.derived());
+    }
+    
+    template<typename OtherDerived>
+    inline Derived & operator= (const InertiaBase<OtherDerived> & other)
+    {
+      other.derived().setTo(derived());
+      return derived();
+    }
+    
+    template<typename OtherDerived>
+    inline Derived & operator+= (const InertiaBase<OtherDerived> & other)
+    {
+      other.derived().addTo(derived());
+      return derived();
+    }
+    
+    template<typename OtherDerived>
+    inline Derived & operator-= (const InertiaBase<OtherDerived> & other)
+    {
+      other.derived().subTo(derived());
+      return derived();
+    }
+    
+    template<typename OtherDerived>
+    inline Derived operator+ (const InertiaBase<OtherDerived> & other) const
+    {
+      return derived().add(other.derived());
+    }
+    
+    template<typename MotionDerived, typename ForceDerived>
+    ForceBase<ForceDerived> operator* (const MotionBase<MotionDerived> & v) const
+    {
+      return derived().__mult__(v);
+    }
+    
+//    Derived& operator= (const Derived& clone){return derived().__equl__(clone);}
+//    bool operator== (const Derived& other) const {return derived().isEqual(other);}
+//    Derived& operator+= (const Derived & Yb) { return derived().__pequ__(Yb); }
+//    Derived operator+(const Derived & Yb) const { return derived().__plus__(Yb); }
+    
 
-    Scalar_t vtiv(const Motion & v) const { return derived().vtiv_impl(v); }
+    template<typename MotionDerived>
+    Scalar_t vtiv(const MotionBase<MotionDerived> & v) const
+    {
+      return derived().vtiv(v.derived());
+    }
 
     void setZero() { derived().setZero(); }
     void setIdentity() { derived().setIdentity(); }
     void setRandom() { derived().setRandom(); }
 
     /// aI = aXb.act(bI)
-    Derived_t se3Action(const SE3 & M) const { return derived().se3Action_impl(M); }
+//    Derived se3Action(const SE3 & M) const { return derived().se3Action_impl(M); }
 
     /// bI = aXb.actInv(aI)
-    Derived_t se3ActionInverse(const SE3 & M) const { return derived().se3ActionInverse_impl(M); }
-
-    void disp(std::ostream & os) const { static_cast<const Derived_t*>(this)->disp_impl(os); }
-    friend std::ostream & operator << (std::ostream & os,const InertiaBase<Derived_t> & X)
-    { 
-      X.disp(os);
-      return os;
-    }
+//    Derived se3ActionInverse(const SE3 & M) const { return derived().se3ActionInverse_impl(M); }
 
   }; // class InertiaBase
 
 
   template<typename T, int U>
-  struct traits< InertiaTpl<T, U> >
+  struct traits< InertiaTpl<T,U> > : traits< InertiaBase< InertiaTpl<T,U> > >
   {
     typedef T Scalar_t;
+    typedef InertiaTpl<T,U> Type;
+    typedef traits< InertiaBase<Type> > BaseTraits;
+    using typename BaseTraits::SE3ActionReturnType;
     typedef Eigen::Matrix<T,3,1,U> Vector3;
     typedef Eigen::Matrix<T,4,1,U> Vector4;
     typedef Eigen::Matrix<T,6,1,U> Vector6;
@@ -106,10 +150,12 @@ namespace se3
   }; // traits InertiaTpl
 
   template<typename _Scalar, int _Options>
-  class InertiaTpl : public InertiaBase< InertiaTpl< _Scalar, _Options > >
+  class InertiaTpl : public InertiaBase< InertiaTpl<_Scalar,_Options> >
   {
   public:
-    friend class InertiaBase< InertiaTpl< _Scalar, _Options > >;
+    friend class InertiaBase< InertiaTpl<_Scalar,_Options> >;
+    typedef InertiaBase< InertiaTpl<_Scalar,_Options> > Base;
+    typedef typename traits<InertiaTpl>::SE3ActionReturnType SE3ActionReturnType;
     SPATIAL_TYPEDEF_TEMPLATE(InertiaTpl);
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     
@@ -121,8 +167,10 @@ namespace se3
     : m(m_), c(c_), I(I_)
     {}
     
-    InertiaTpl(const Matrix6 & I6)
+    template<typename EigenDerived>
+    InertiaTpl(const Eigen::MatrixBase<EigenDerived> & I6)
     {
+      EIGEN_STATIC_ASSERT_MATRIX_SPECIFIC_SIZE(EigenDerived,6,6);
       assert((I6 - I6.transpose()).isMuchSmallerThan(I6));
       m = I6(LINEAR, LINEAR);
       const Matrix3 & mc_cross = I6.template block <3,3> (ANGULAR,LINEAR);
@@ -217,75 +265,99 @@ namespace se3
     
     void setRandom()
     {
-      m = static_cast<Scalar_t> (std::rand()) / static_cast<Scalar_t> (RAND_MAX);
+      m = static_cast<Scalar_t> (std::rand()) / RAND_MAX;
       c.setRandom(); I.setRandom();
     }
 
-    Matrix6 matrix_impl() const
+    inline Matrix6 matrix() const
     {
       Matrix6 M;
-      const Matrix3 & c_cross = (skew(c));
-      M.template block<3,3>(LINEAR, LINEAR ).setZero ();
-      M.template block<3,3>(LINEAR, LINEAR ).diagonal ().fill (m);
-      M.template block<3,3>(ANGULAR,LINEAR ) = m * c_cross;
+      M.template block<3,3>(LINEAR, LINEAR ).setZero();
+      M.template block<3,3>(LINEAR, LINEAR ).diagonal().fill(m);
+      M.template block<3,3>(ANGULAR,LINEAR ) = alphaSkew(m,c);
       M.template block<3,3>(LINEAR, ANGULAR) = -M.template block<3,3> (ANGULAR, LINEAR);
-      M.template block<3,3>(ANGULAR,ANGULAR) = I - M.template block<3,3>(ANGULAR, LINEAR) * c_cross;
+      M.template block<3,3>(ANGULAR,ANGULAR) = I.matrix();
+      for(int k=0; k<3; ++k)
+        M.template block<3,3>(ANGULAR,ANGULAR).col(k) -= c.cross(M.template block<3,3>(ANGULAR, LINEAR).col(k));
 
       return M;
     }
+    
+    operator Matrix6 () const { return matrix(); }
 
     // Arithmetic operators
-    InertiaTpl& __equl__ (const InertiaTpl& clone)
+    template<typename OtherScalar, int OtherOptions>
+    inline void setTo (InertiaTpl<OtherScalar,OtherOptions> & dest) const
     {
-      m=clone.m; c=clone.c; I=clone.I;
-      return *this;
+      dest.mass() = m;
+      dest.lever() = c;
+      dest.inertia() = I;
     }
 
     // Requiered by std::vector boost::python bindings. 
-    bool isEqual( const InertiaTpl& Y2 ) const
+    inline bool isEqual( const InertiaTpl& Y2 ) const
     { 
       return (m==Y2.m) && (c==Y2.c) && (I==Y2.I);
     }
 
-    InertiaTpl __plus__(const InertiaTpl &Yb) const
+    template<typename OtherScalar, int OtherOptions>
+    inline  InertiaTpl add(const InertiaTpl<OtherScalar,OtherOptions> & Yb) const
     {
       /* Y_{a+b} = ( m_a+m_b,
        *             (m_a*c_a + m_b*c_b ) / (m_a + m_b),
        *             I_a + I_b - (m_a*m_b)/(m_a+m_b) * AB_x * AB_x )
        */
 
-      const double & mab = m+Yb.m;
-      const Vector3 & AB = (c-Yb.c).eval();
-      return InertiaTpl( mab,
-                         (m*c+Yb.m*Yb.c)/mab,
-                         I+Yb.I - (m*Yb.m/mab)* typename Symmetric3::SkewSquare(AB));
+      const double & mab = m+Yb.mass();
+      const Vector3 & AB = (c-Yb.lever());
+      return InertiaTpl(mab,
+                        (m*c+Yb.mass()*Yb.lever())/mab,
+                        I+Yb.inertia() - (m*Yb.mass()/mab) * typename Symmetric3::SkewSquare(AB));
     }
 
-    InertiaTpl& __pequ__(const InertiaTpl &Yb)
+    
+    template<typename OtherScalar, int OtherOptions>
+    inline InertiaTpl & operator+= (const InertiaTpl<OtherScalar,OtherOptions> & Yb)
     {
       const InertiaTpl& Ya = *this;
       const double & mab = Ya.m+Yb.m;
-      const Vector3 & AB = (Ya.c-Yb.c).eval();
-      c *= m; c += Yb.m*Yb.c; c /= mab;
-      I += Yb.I; I -= (Ya.m*Yb.m/mab)* typename Symmetric3::SkewSquare(AB);
+      const Vector3 & AB = (Ya.c-Yb.c);
+      c *= m; c += Yb.mass()*Yb.lever(); c /= mab;
+      I += Yb.inertia(); I -= (Ya.m*Yb.mass()/mab) * typename Symmetric3::SkewSquare(AB);
       m  = mab;
       return *this;
     }
-
-    Force __mult__(const Motion &v) const 
+    
+    template<typename OtherScalar, int OtherOptions>
+    inline void addTo (InertiaTpl<OtherScalar,OtherOptions> & dest) const
     {
-      Force f;
+      dest += *this;
+    }
+
+//    Force __mult__(const Motion &v) const 
+//    {
+//      Force f;
+//      f.linear() = m*(v.linear() - c.cross(v.angular()));
+//      f.angular() = c.cross(f.linear()) + I*v.angular();
+//      return f;
+//    }
+    
+    inline ForceTpl<_Scalar,_Options> operator* (const MotionTpl<_Scalar,_Options> & v) const
+    {
+      typedef ForceTpl<_Scalar,_Options> ForceType;
+      ForceType f;
       f.linear() = m*(v.linear() - c.cross(v.angular()));
       f.angular() = c.cross(f.linear()) + I*v.angular();
       return f;
     }
     
-    Scalar_t vtiv_impl(const Motion & v) const
+    template<typename MotionScalar, int MotionOptions>
+    inline Scalar_t vtiv(const MotionTpl<MotionScalar,MotionOptions> & v) const
     {
       const Vector3 cxw (c.cross(v.angular()));
       Scalar_t res = m * (v.linear().squaredNorm() - 2.*v.linear().dot(cxw));
-      const Vector3 mcxcxw (-m*c.cross(cxw));
-      res += v.angular().dot(mcxcxw);
+//      const Vector3 mcxcxw (-m*c.cross(cxw));
+      res -= m * v.angular().dot(c.cross(cxw));
       res += I.vtiv(v.angular());
       
       return res;
@@ -301,37 +373,42 @@ namespace se3
     Symmetric3 & inertia() { return I; }
 
     /// aI = aXb.act(bI)
-    InertiaTpl se3Action_impl(const SE3 & M) const
+    template<typename SE3Scalar, int SE3Options>
+    inline  InertiaTpl SE3ActOn(const SE3Tpl<SE3Scalar,SE3Options> & M) const
     {
       /* The multiplication RIR' has a particular form that could be used, however it
        * does not seems to be more efficient, see http://stackoverflow.com/questions/
        * 13215467/eigen-best-way-to-evaluate-asa-transpose-and-store-the-result-in-a-symmetric .*/
-       return InertiaTpl( m,
-                          M.translation()+M.rotation()*c,
-                          I.rotate(M.rotation()) );
+       return InertiaTpl(m,
+                         M.translation()+M.rotation()*c,
+                         I.rotate(M.rotation()));
      }
 
     ///bI = aXb.actInv(aI)
-    InertiaTpl se3ActionInverse_impl(const SE3 & M) const
+    template<typename SE3Scalar, int SE3Options>
+    inline InertiaTpl SE3InvActOn(const SE3Tpl<SE3Scalar,SE3Options> & M) const
     {
       return InertiaTpl(m,
                         M.rotation().transpose()*(c-M.translation()),
                         I.rotate(M.rotation().transpose()) );
     }
 
-    Force vxiv( const Motion& v ) const 
+    template<typename MotionScalar, int MotionOptions>
+    inline ForceTpl<MotionScalar,MotionOptions> vxiv(const MotionTpl<MotionScalar, MotionOptions> & v) const
     {
+      typedef ForceTpl<MotionScalar,MotionOptions> ReturnType;
       const Vector3 & mcxw = m*c.cross(v.angular());
       const Vector3 & mv_mcxw = m*v.linear()-mcxw;
-      return Force( v.angular().cross(mv_mcxw),
-                    v.angular().cross(c.cross(mv_mcxw)+I*v.angular())-v.linear().cross(mcxw) );
+      return ReturnType(v.angular().cross(mv_mcxw),
+                        v.angular().cross(c.cross(mv_mcxw)+I*v.angular())-v.linear().cross(mcxw) );
     }
 
-    void disp_impl(std::ostream & os) const
+    void disp(std::ostream & os) const
     {
-      os  << "  m = " << m << "\n"
+      os
+      << "  m = " << m << "\n"
       << "  c = " << c.transpose() << "\n"
-      << "  I = \n" << (Matrix3)I << "";
+      << "  I = \n" << (Matrix3)I << "\n";
     }
 
   protected:
@@ -340,6 +417,7 @@ namespace se3
     Symmetric3 I;
     
   }; // class InertiaTpl
+  
 
   typedef InertiaTpl<double,0> Inertia;
     

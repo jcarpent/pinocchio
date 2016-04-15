@@ -41,8 +41,8 @@ BOOST_PYTHON_MODULE(libpinocchio_pywrap)
   eigenpy::enableEigenPySpecific<Matrix3x,Matrix3x>();
 
   se3::python::exposeSE3();
-  se3::python::exposeForce();
   se3::python::exposeMotion();
+  se3::python::exposeForce();
   se3::python::exposeInertia();
   se3::python::exposeJoints();
   se3::python::exposeExplog();

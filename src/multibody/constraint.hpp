@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2015 CNRS
+// Copyright (c) 2015-2016 CNRS
 //
 // This file is part of Pinocchio
 // Pinocchio is free software: you can redistribute it
@@ -31,39 +31,32 @@ namespace se3
 {
   template<int _Dim, typename _Scalar, int _Options=0> class ConstraintTpl;
 
-  template< class Derived>
-  class ConstraintBase
+  template <class Derived>
+  class ConstraintBase : public SpatialBase <Derived>
   {
   protected:
-    typedef Derived  Derived_t;
-    SPATIAL_TYPEDEF_TEMPLATE(Derived_t);
-    typedef typename traits<Derived_t>::JointMotion JointMotion;
-    typedef typename traits<Derived_t>::JointForce JointForce;
-    typedef typename traits<Derived_t>::DenseBase DenseBase;
+    SPATIAL_TYPEDEF_TEMPLATE(Derived);
+    typedef typename traits<Derived>::JointMotion JointMotion;
+    typedef typename traits<Derived>::JointForce JointForce;
+    typedef typename traits<Derived>::DenseBase DenseBase;
 
   public:
-    Derived_t & derived() { return *static_cast<Derived_t*>(this); }
-    const Derived_t& derived() const { return *static_cast<const Derived_t*>(this); }
+    typedef SpatialBase<Derived> Base;
+    using Base::derived;
 
     Motion operator* (const JointMotion& vj) const { return derived().__mult__(vj); }
 
     DenseBase & matrix()  { return derived().matrix_impl(); }
     const DenseBase & matrix() const  { return derived().matrix_impl(); }
     int nv() const { return derived().nv_impl(); }
-    
-    void disp(std::ostream & os) const { static_cast<const Derived_t*>(this)->disp_impl(os); }
-    friend std::ostream & operator << (std::ostream & os,const ConstraintBase<Derived> & X)
-    {
-      X.disp(os);
-      return os;
-    }
 
   }; // class ConstraintBase
 
   template<int D, typename T, int U>
-  struct traits< ConstraintTpl<D, T, U> >
+  struct traits< ConstraintTpl<D,T,U> >
   {
     typedef T Scalar_t;
+    typedef Eigen::Matrix<T,6,D,U> SE3ActionReturnType;
     typedef Eigen::Matrix<T,3,1,U> Vector3;
     typedef Eigen::Matrix<T,4,1,U> Vector4;
     typedef Eigen::Matrix<T,6,1,U> Vector6;
@@ -90,26 +83,27 @@ namespace se3
 
   }; // traits ConstraintTpl
 
-  namespace internal
-  {  
-    template<int Dim, typename Scalar, int Options>
-    struct ActionReturn<ConstraintTpl<Dim,Scalar,Options> >
-    { typedef Eigen::Matrix<Scalar,6,Dim> Type; };
-  }
+//  namespace internal
+//  {  
+//    template<int Dim, typename Scalar, int Options>
+//    struct ActionReturn<ConstraintTpl<Dim,Scalar,Options> >
+//    { typedef Eigen::Matrix<Scalar,6,Dim> Type; };
+//  }
 
   template<int _Dim, typename _Scalar, int _Options>
-  class ConstraintTpl : public ConstraintBase<ConstraintTpl < _Dim, _Scalar, _Options > >
+  class ConstraintTpl : public ConstraintBase< ConstraintTpl<_Dim,_Scalar,_Options> >
   { 
   public:
     
-    typedef ConstraintBase< ConstraintTpl< _Dim, _Scalar, _Options > > Base;
+    typedef ConstraintBase< ConstraintTpl<_Dim,_Scalar,_Options> > Base;
 
-    friend class ConstraintBase< ConstraintTpl< _Dim, _Scalar, _Options > >;
+    friend class ConstraintBase< ConstraintTpl<_Dim,_Scalar,_Options> >;
     SPATIAL_TYPEDEF_TEMPLATE(ConstraintTpl);
     
     typedef typename Base::JointMotion JointMotion;
     typedef typename Base::JointForce JointForce;
     typedef typename Base::DenseBase DenseBase;
+    typedef typename traits<ConstraintTpl>::SE3ActionReturnType SE3ActionReturnType;
     
     enum { NV = _Dim, Options = _Options };
 
@@ -148,7 +142,7 @@ namespace se3
       Transpose( const ConstraintTpl & ref ) : ref(ref) {}
 
       JointForce operator* (const Force& f) const
-      { return (ref.S.transpose()*f.toVector()).eval(); }
+      { return (ref.S.transpose()*f.coeffs()).eval(); }
 
       template<typename D>
       typename Eigen::Matrix<_Scalar,NV,Eigen::Dynamic>
@@ -169,11 +163,11 @@ namespace se3
     friend Eigen::Matrix<_Scalar,6,_Dim>
     operator*( const InertiaTpl<_Scalar,_Options> & Y,const ConstraintTpl<_Dim,_Scalar,_Options> & S)
     { return (Y.matrix()*S.S).eval(); }
-
     
-    DenseBase se3Action(const SE3 & m) const
+    template<typename SE3Scalar, int SE3Options>
+    SE3ActionReturnType SE3ActOn(const SE3Tpl<SE3Scalar,SE3Options> & M) const
     {
-      return (m.toActionMatrix()*S).eval();
+      return M.toActionMatrix()*S;
     }
     
     void disp_impl(std::ostream & os) const { os << "S =\n" << S << std::endl;}

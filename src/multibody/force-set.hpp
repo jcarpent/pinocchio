@@ -169,11 +169,11 @@ namespace se3
 
   typedef ForceSetTpl<double,0> ForceSet;
 
-  namespace internal 
-  {
-    template<>
-    struct ActionReturn<ForceSet::Block>    { typedef ForceSet Type; };
-  }
+//  namespace internal 
+//  {
+//    template<>
+//    struct ActionReturn<ForceSet::Block>    { typedef ForceSet Type; };
+//  }
 
 
 } // namespace se3

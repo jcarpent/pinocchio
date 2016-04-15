@@ -37,7 +37,7 @@ namespace se3
   ///
   /// \return The joint space inertia matrix with only the upper triangular part computed.
   ///
-  inline const Eigen::MatrixXd &
+  inline const Data::MassMatrix &
   crba(const Model & model,
        Data & data,
        const Eigen::VectorXd & q);

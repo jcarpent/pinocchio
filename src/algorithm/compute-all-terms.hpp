@@ -97,6 +97,7 @@ namespace se3
       else
         data.oMi[i] = data.liMi[i];
 
+      // Jacobian
       jmodel.jointCols(data.J) = data.oMi[i].act(jdata.S());
 
       data.a_gf[i] = data.a[i] = jdata.c() + (data.v[i] ^ jdata.v());
@@ -154,14 +155,15 @@ namespace se3
       jmodel.jointVelocitySelector(data.nle)  = jdata.S().transpose()*data.f[i];
       if(parent>0)
       {
+        typedef Data::Matrix6x::ColsBlockXpr Block;
         /*   Yli += liXi Yi */
         data.Ycrb[parent] += data.liMi[i].act(data.Ycrb[i]);
 
         /*   F[1:6,SUBTREE] = liXi F[1:6,SUBTREE] */
-        Eigen::Block<typename Data::Matrix6x> jF
-        = data.Fcrb[parent].block(0,jmodel.idx_v(),6,data.nvSubtree[i]);
-        Eigen::Block<typename Data::Matrix6x> iF
-        = data.Fcrb[i].block(0,jmodel.idx_v(),6,data.nvSubtree[i]);
+        Block jF
+        = data.Fcrb[parent].middleCols (jmodel.idx_v(),data.nvSubtree[i]);
+        Block iF
+        = data.Fcrb[i].middleCols (jmodel.idx_v(),data.nvSubtree[i]);
         forceSet::se3Action(data.liMi[i], iF, jF);
 
         data.f[parent] += data.liMi[i].act(data.f[i]);

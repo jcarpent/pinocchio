@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE ( test_kinematics )
   q.middleRows<4> (3).normalize();
   framesForwardKinematics(model, data, q);
 
-  BOOST_CHECK(data.oMof[model.getFrameId(frame_name)].isApprox(data.oMi[parent_idx]*framePlacement));
+  BOOST_CHECK(data.oMof[model.getFrameId(frame_name)].isApprox((data.oMi[parent_idx]*framePlacement).eval()));
 
 }
 
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE ( test_jacobian )
   nu_frame_from_nu_joint.linear() -= (data.oMi[parent_idx].rotation() *framePlacement.translation()).cross(nu_joint.angular());
 
 
-  BOOST_CHECK(nu_frame.toVector().isApprox(nu_frame_from_nu_joint.toVector(), 1e-12));
+  BOOST_CHECK(nu_frame.coeffs().isApprox(nu_frame_from_nu_joint.coeffs(), 1e-12));
 
 
   /// In local frame
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE ( test_jacobian )
   nu_frame = Jff*q_dot;
   nu_joint = Jjj*q_dot;
 
-  BOOST_CHECK(nu_frame.toVector().isApprox(framePlacement.actInv(nu_joint).toVector(), 1e-12));
+  BOOST_CHECK(nu_frame.coeffs().isApprox(framePlacement.actInv(nu_joint).coeffs(), 1e-12));
 }
 
 BOOST_AUTO_TEST_SUITE_END ()

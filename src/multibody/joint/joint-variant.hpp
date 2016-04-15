@@ -64,6 +64,18 @@ namespace se3
     { return boost::apply_visitor( Joint_nq(), jmodel ); }
   };
   inline int nq(const JointModelVariant & jmodel) { return Joint_nq::run(jmodel); }
+  
+  class Joint_shortname: public boost::static_visitor<std::string>
+  {
+  public:
+    template<typename D>
+    std::string operator()(const JointModelBase<D> & ) const
+    { return D::shortname(); }
+    
+    static std::string run( const JointModelVariant & jmodel)
+    { return boost::apply_visitor( Joint_shortname(), jmodel ); }
+  };
+  inline std::string shortname(const JointModelVariant & jmodel) { return Joint_shortname::run(jmodel); }
 
   class Joint_idx_q: public boost::static_visitor<int>
   {

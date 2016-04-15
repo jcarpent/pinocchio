@@ -44,6 +44,7 @@ namespace se3
       : public boost::python::def_visitor< InertiaPythonVisitor<Inertia> >
     {
       typedef typename eigenpy::UnalignedEquivalent<Inertia>::type Inertia_fx;
+      typedef typename eigenpy::UnalignedEquivalent<SE3>::type SE3_fx;
       typedef typename Inertia::Matrix3 Matrix3;
       typedef typename Inertia::Matrix6 Matrix6;
       typedef typename Inertia::Vector6 Vector6;
@@ -80,8 +81,8 @@ namespace se3
         .add_property("inertia", &InertiaPythonVisitor::getInertia, &InertiaPythonVisitor::setInertia)
         
         .def("matrix",&Inertia_fx::matrix)
-        .def("se3Action",&Inertia_fx::se3Action)
-        .def("se3ActionInverse",&Inertia_fx::se3ActionInverse)
+        .def("se3Action",&InertiaPythonVisitor::SE3ActOn)
+        .def("se3ActionInverse",&InertiaPythonVisitor::SE3InvActOn)
         
         .def("setIdentity",&Inertia_fx::setIdentity)
         .def("setZero",&Inertia_fx::setZero)
@@ -118,6 +119,9 @@ namespace se3
       
       static Vector3_fx getLever( const Inertia_fx & self ) { return self.lever(); }
       static void setLever( Inertia_fx & self, const Vector3_fx & lever ) { self.lever() = lever; }
+      
+      static Inertia_fx SE3ActOn(const Inertia_fx & self, const SE3_fx & M) { return self.SE3ActOn(M); }
+      static Inertia_fx SE3InvActOn(const Inertia_fx & self, const SE3_fx & M) { return self.SE3InvActOn(M); }
       
       static Matrix3_fx getInertia( const Inertia_fx & self ) { return self.inertia().matrix(); }
       static void setInertia( Inertia_fx & self, const Vector6_fx & minimal_inertia ) { self.inertia().data() = minimal_inertia; }

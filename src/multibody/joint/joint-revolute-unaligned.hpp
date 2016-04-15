@@ -34,9 +34,13 @@ namespace se3
 
   struct MotionRevoluteUnaligned;
   template <>
-  struct traits < MotionRevoluteUnaligned >
+  struct traits <MotionRevoluteUnaligned> : traits< MotionBase<MotionRevoluteUnaligned> >
   {
     typedef double Scalar_t;
+    typedef MotionRevoluteUnaligned Type;
+    typedef traits< MotionBase<Type> > BaseTraits;
+    using typename BaseTraits::SE3ActionReturnType;
+    typedef Scalar_t DotReturnType;
     typedef Eigen::Matrix<double,3,1,0> Vector3;
     typedef Eigen::Matrix<double,4,1,0> Vector4;
     typedef Eigen::Matrix<double,6,1,0> Vector6;
@@ -74,6 +78,12 @@ namespace se3
       return Motion(Motion::Vector3::Zero(),
                     axis*w);
     }
+    
+    template<typename OtherScalar, int OtherOptions>
+    void addTo (MotionTpl<OtherScalar, OtherOptions> & dest) const
+    {
+      dest.angular() += axis*w;
+    }
   }; // struct MotionRevoluteUnaligned
 
   inline const MotionRevoluteUnaligned& operator+ (const MotionRevoluteUnaligned& m, const BiasZero&)
@@ -86,9 +96,10 @@ namespace se3
 
   struct ConstraintRevoluteUnaligned;
   template <>
-  struct traits < ConstraintRevoluteUnaligned >
+  struct traits <ConstraintRevoluteUnaligned>
   {
     typedef double Scalar_t;
+    typedef Eigen::Matrix<double,6,1,0> SE3ActionReturnType;
     typedef Eigen::Matrix<double,3,1,0> Vector3;
     typedef Eigen::Matrix<double,4,1,0> Vector4;
     typedef Eigen::Matrix<double,6,1,0> Vector6;
@@ -124,6 +135,7 @@ namespace se3
       typedef traits<ConstraintRevoluteUnaligned>::JointMotion JointMotion;
       typedef traits<ConstraintRevoluteUnaligned>::JointForce JointForce;
       typedef traits<ConstraintRevoluteUnaligned>::DenseBase DenseBase;
+      typedef traits<ConstraintRevoluteUnaligned>::SE3ActionReturnType SE3ActionReturnType;
 
       ConstraintRevoluteUnaligned() : axis(Motion::Vector3::Constant(NAN)) {}
       ConstraintRevoluteUnaligned(const Motion::Vector3 & _axis) : axis(_axis) {}
@@ -136,12 +148,13 @@ namespace se3
       	return MotionRevoluteUnaligned(axis,v[0]); 
       }
 
-      Eigen::Matrix<double,6,1> se3Action(const SE3 & m) const
+      template<typename SE3Scalar, int SE3Options>
+      SE3ActionReturnType SE3ActOn(const SE3Tpl<SE3Scalar,SE3Options> & M) const
       { 
         /* X*S = [ R pxR ; 0 R ] [ 0 ; a ] = [ px(Ra) ; Ra ] */
-        Eigen::Matrix<double,6,1> res;
-        res.tail<3>() = m.rotation() * axis;
-        res.head<3>() = m.translation().cross(res.tail<3>());
+        SE3ActionReturnType res;
+        res.tail<3>() = M.rotation() * axis;
+        res.head<3>() = M.translation().cross(res.tail<3>());
         return res;
       }
 
@@ -158,15 +171,15 @@ namespace se3
       	}
 
         /* [CRBA]  MatrixBase operator* (Constraint::Transpose S, ForceSet::Block) */
-        template<typename D>
+        template<typename EigenDerived>
         friend
         const typename Eigen::ProductReturnType<
         Eigen::Transpose<const Vector3>,
-        typename Eigen::MatrixBase<const D>::template NRowsBlockXpr<3>::Type
+        typename Eigen::MatrixBase<const EigenDerived>::template NRowsBlockXpr<3>::Type
         >::Type
-        operator* (const TransposeConst & tc, const Eigen::MatrixBase<D> & F)
+        operator* (const TransposeConst & tc, const Eigen::MatrixBase<EigenDerived> & F)
         {
-          EIGEN_STATIC_ASSERT(D::RowsAtCompileTime==6,THIS_METHOD_IS_ONLY_FOR_MATRICES_OF_A_SPECIFIC_SIZE)
+          EIGEN_STATIC_ASSERT(EigenDerived::RowsAtCompileTime==6,THIS_METHOD_IS_ONLY_FOR_MATRICES_OF_A_SPECIFIC_SIZE)
           /* Return ax.T * F[3:end,:] */
           return tc.ref.axis.transpose () * F.template bottomRows<3> ();
         }
@@ -227,12 +240,12 @@ namespace se3
     return Y.block<6,3> (0,Inertia::ANGULAR) * cru.axis;
   }
   
-    namespace internal
-    {
-      template<>
-      struct ActionReturn<ConstraintRevoluteUnaligned >  
-      { typedef Eigen::Matrix<double,6,1> Type; };
-    }
+//    namespace internal
+//    {
+//      template<>
+//      struct ActionReturn<ConstraintRevoluteUnaligned >  
+//      { typedef Eigen::Matrix<double,6,1> Type; };
+//    }
 
     struct JointRevoluteUnaligned;
     template<>
@@ -354,12 +367,12 @@ namespace se3
     
     void calc_aba(JointData & data, Inertia::Matrix6 & I, const bool update_I) const
     {
-      data.U = I.block<6,3> (0,Inertia::ANGULAR) * axis;
+      data.U.noalias() = I.block<6,3> (0,Inertia::ANGULAR) * data.v.axis;
       data.Dinv[0] = 1./axis.dot(data.U.segment <3> (Inertia::ANGULAR));
-      data.UDinv = data.U * data.Dinv;
+      data.UDinv.noalias() = data.U * data.Dinv;
       
       if (update_I)
-        I -= data.UDinv * data.U.transpose();
+        I.noalias() -= data.UDinv * data.U.transpose();
     }
 
     ConfigVector_t integrate_impl(const Eigen::VectorXd & qs,const Eigen::VectorXd & vs) const

@@ -30,6 +30,7 @@ namespace se3
   {
     typedef boost::fusion::vector<const se3::Model&,
                                   se3::Data &,
+    const Model::JointIndex &,
                                   const Eigen::VectorXd &
                                   > ArgsType;
 
@@ -37,12 +38,13 @@ namespace se3
 
     template<typename JointModel>
     static void algo(const se3::JointModelBase<JointModel> & jmodel,
-		     se3::JointDataBase<typename JointModel::JointData> & jdata,
-		     const se3::Model & model,
-		     se3::Data & data,
-		     const Eigen::VectorXd & q)
+                            se3::JointDataBase<typename JointModel::JointData> & jdata,
+                            const se3::Model & model,
+                            se3::Data & data,
+                            const Model::JointIndex & i,
+                            const Eigen::VectorXd & q)
     {
-      const Model::JointIndex & i = (Model::JointIndex) jmodel.id();
+//      const Model::JointIndex & i = (Model::JointIndex) jmodel.id();
       jmodel.calc(jdata.derived(),q);
       
       data.liMi[i] = model.jointPlacements[i]*jdata.M();
@@ -54,15 +56,17 @@ namespace se3
   struct CrbaBackwardStep : public fusion::JointVisitor<CrbaBackwardStep>
   {
     typedef boost::fusion::vector<const Model&,
-				  Data&>  ArgsType;
+    Data&,
+    const Model::JointIndex &>  ArgsType;
     
     JOINT_VISITOR_INIT(CrbaBackwardStep);
 
     template<typename JointModel>
     static void algo(const JointModelBase<JointModel> & jmodel,
-                     JointDataBase<typename JointModel::JointData> & jdata,
-                     const Model & model,
-                     Data & data)
+                            JointDataBase<typename JointModel::JointData> & jdata,
+                            const Model & model,
+                            Data & data,
+                            const Model::JointIndex & i)
     {
       /*
        * F[1:6,i] = Y*S
@@ -72,46 +76,63 @@ namespace se3
        *   F[1:6,SUBTREE] = liXi F[1:6,SUBTREE]
        */
       typedef Data::Matrix6x::ColsBlockXpr Block;
-      const Model::JointIndex & i = (Model::JointIndex) jmodel.id();
+//      const Model::JointIndex & i = (Model::JointIndex) jmodel.id();
 
       /* F[1:6,i] = Y*S */
       //data.Fcrb[i].block<6,JointModel::NV>(0,jmodel.idx_v()) = data.Ycrb[i] * jdata.S();
-      jmodel.jointCols(data.Fcrb[i]) = data.Ycrb[i] * jdata.S();
+//      jmodel.jointCols(data.Fcrb[i]) = data.Ycrb[i] * jdata.S();
 
       /* M[i,SUBTREE] = S'*F[1:6,SUBTREE] */
-      data.M.block(jmodel.idx_v(),jmodel.idx_v(),jmodel.nv(),data.nvSubtree[i]) 
-      = jdata.S().transpose()*data.Fcrb[i].middleCols(jmodel.idx_v(),data.nvSubtree[i]);
 
-      const Model::JointIndex & parent   = model.parents[i];
+      const Model::JointIndex & parent = model.parents[i];
       if(parent>0)
       {
         /*   Yli += liXi Yi */
         data.Ycrb[parent] += data.liMi[i].act(data.Ycrb[i]);
+        jmodel.jointCols(data.Fcrb[0]) = data.Ycrb[i] * jdata.S();
+        
+        Block iF
+        = data.Fcrb[0].middleCols(jmodel.idx_v(),data.nvSubtree[i]);
+        
+        
+        data.M.block(jmodel.idx_v(),jmodel.idx_v(),jmodel.nv(),data.nvSubtree[i])
+        = jdata.S().transpose()*iF;
         
         /*   F[1:6,SUBTREE] = liXi F[1:6,SUBTREE] */
         Block jF
-        = data.Fcrb[parent].middleCols(jmodel.idx_v(),data.nvSubtree[i]);
-        Block iF
-        = data.Fcrb[i].middleCols(jmodel.idx_v(),data.nvSubtree[i]);
+        = data.Fcrb[0].middleCols(jmodel.idx_v(),data.nvSubtree[i]);
+        
         forceSet::se3Action(data.liMi[i], iF, jF);
+      }
+      else
+      {
+        jmodel.jointCols(data.Fcrb[0]) = data.Ycrb[i] * jdata.S();
+        Block iF
+        = data.Fcrb[0].middleCols(jmodel.idx_v(),data.nvSubtree[i]);
+        
+        
+        data.M.block(jmodel.idx_v(),jmodel.idx_v(),jmodel.nv(),data.nvSubtree[i])
+        = jdata.S().transpose()*iF;
       }
     }
   };
 
-  inline const Eigen::MatrixXd&
-  crba(const Model & model, Data& data,
+  inline const Data::MassMatrix &
+  crba(const Model & model, Data & data,
        const Eigen::VectorXd & q)
   {
-    for( Model::JointIndex i=1;i<(Model::JointIndex)(model.nbody);++i )
+    const Model::JointIndex nbody = (Model::JointIndex) model.nbody;
+
+    for( Model::JointIndex i=1;i<nbody;++i )
     {
       CrbaForwardStep::run(model.joints[i],data.joints[i],
-                           CrbaForwardStep::ArgsType(model,data,q));
+                           CrbaForwardStep::ArgsType(model,data,i,q));
     }
     
-    for( Model::JointIndex i=(Model::JointIndex)(model.nbody-1);i>0;--i )
+    for( Model::JointIndex i=nbody-1;i>0;--i )
     {
       CrbaBackwardStep::run(model.joints[i],data.joints[i],
-                            CrbaBackwardStep::ArgsType(model,data));
+                            CrbaBackwardStep::ArgsType(model,data,i));
     }
 
     return data.M;
@@ -199,9 +220,9 @@ namespace se3
     const Block3x Ag_lin = data.Ag.middleRows<3> (Force::LINEAR);
     Block3x Ag_ang = data.Ag.middleRows<3>  (Force::ANGULAR);
     for (long i = 0; i<model.nv; ++i)
-      Ag_ang.col(i) += Ag_lin.col(i).cross(data.com[0]);
+      Ag_ang.col(i).noalias() += Ag_lin.col(i).cross(data.com[0]);
     
-    data.hg = data.Ag*v;
+    data.hg.coeffs() = data.Ag*v;
     
     data.Ig.mass() = data.Ycrb[0].mass();
     data.Ig.lever().setZero();

@@ -22,13 +22,20 @@
 
 namespace se3
 {
+  template<typename Derived> class SpatialBase;
+  
+  template<typename Derived> class SE3Base;
   template<typename _Scalar, int _Options=0> class SE3Tpl;
+  template<typename Derived> class MotionBase;
   template<typename _Scalar, int _Options=0> class MotionTpl;
+  template<typename Derived> class ForceBase;
   template<typename _Scalar, int _Options=0> class ForceTpl;
+  template<typename Derived> class InertiaBase;
   template<typename _Scalar, int _Options=0> class InertiaTpl;
   template<typename _Scalar, int _Options=0> class Symmetric3Tpl;
 
   template<class C> struct traits {};
+//  template<class C, class D> struct traits {};
 
   #define SPATIAL_TYPEDEF_TEMPLATE(derived)              \
     typedef typename traits<derived>::Scalar_t Scalar_t; \

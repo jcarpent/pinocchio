@@ -51,6 +51,7 @@ BOOST_AUTO_TEST_CASE ( test_rnea )
 {
   #ifdef __SSE3__
     _MM_SET_DENORMALS_ZERO_MODE(_MM_DENORMALS_ZERO_ON);
+  #pragma message "SSE3 ON"
   #endif
   using namespace Eigen;
   using namespace se3;
@@ -75,6 +76,10 @@ BOOST_AUTO_TEST_CASE ( test_rnea )
   StackTicToc timer(StackTicToc::US); timer.tic();
   SMOOTH(NBT)
     {
+      q.setRandom();
+      q.segment <4> (3).normalize();
+      v.setRandom();
+      a.setRandom();
       rnea(model,data,q,v,a);
     }
   timer.toc(std::cout,NBT);

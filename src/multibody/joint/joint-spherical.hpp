@@ -37,9 +37,13 @@ namespace se3
 
   struct MotionSpherical;
   template <>
-  struct traits< MotionSpherical >
+  struct traits<MotionSpherical> : traits< MotionBase<MotionSpherical> >
   {
     typedef double Scalar_t;
+    typedef MotionSpherical Type;
+    typedef traits< MotionBase<Type> > BaseTraits;
+    using typename BaseTraits::SE3ActionReturnType;
+    typedef Scalar_t DotReturnType;
     typedef Eigen::Matrix<double,3,1,0> Vector3;
     typedef Eigen::Matrix<double,4,1,0> Vector4;
     typedef Eigen::Matrix<double,6,1,0> Vector6;
@@ -77,6 +81,18 @@ namespace se3
     {
       return Motion (Motion::Vector3::Zero (), w);
     }
+    
+    template<typename OtherScalar, int OtherOptions>
+    void addTo (MotionTpl<OtherScalar, OtherOptions> & dest) const
+    {
+      dest.angular() += w;
+    }
+    
+    template<typename OtherScalar, int OtherOptions>
+    void subTo (MotionTpl<OtherScalar, OtherOptions> & dest) const
+    {
+      dest.angular() -= w;
+    }
   }; // struct MotionSpherical
 
   inline const MotionSpherical operator+ (const MotionSpherical & m, const BiasZero & )
@@ -89,9 +105,10 @@ namespace se3
 
   struct ConstraintRotationalSubspace;
   template <>
-  struct traits < struct ConstraintRotationalSubspace >
+  struct traits <ConstraintRotationalSubspace>
   {
     typedef double Scalar_t;
+    typedef Eigen::Matrix<double,6,3,0> SE3ActionReturnType;
     typedef Eigen::Matrix<double,3,1,0> Vector3;
     typedef Eigen::Matrix<double,4,1,0> Vector4;
     typedef Eigen::Matrix<double,6,1,0> Vector6;
@@ -117,13 +134,14 @@ namespace se3
     typedef Eigen::Matrix<Scalar_t,6,3> DenseBase;
   }; // struct traits struct ConstraintRotationalSubspace
 
-  struct ConstraintRotationalSubspace
+  struct ConstraintRotationalSubspace : ConstraintBase <ConstraintRotationalSubspace>
   {
     SPATIAL_TYPEDEF_NO_TEMPLATE(ConstraintRotationalSubspace);
     enum { NV = 3, Options = 0 };
     typedef traits<ConstraintRotationalSubspace>::JointMotion JointMotion;
     typedef traits<ConstraintRotationalSubspace>::JointForce JointForce;
     typedef traits<ConstraintRotationalSubspace>::DenseBase DenseBase;
+    typedef traits<ConstraintRotationalSubspace>::SE3ActionReturnType SE3ActionReturnType;
 
     /// Missing operator*
     // Motion operator* (const MotionSpherical & vj) const
@@ -150,28 +168,30 @@ namespace se3
 
     operator ConstraintXd () const
     {
-      Eigen::Matrix<double,6,3> S;
-      S.block <3,3> (Inertia::LINEAR, 0).setZero ();
-      S.block <3,3> (Inertia::ANGULAR, 0).setIdentity ();
+      SE3ActionReturnType S;
+      S.middleRows <3> (Inertia::LINEAR).setZero();
+      S.middleRows <3> (Inertia::ANGULAR).setIdentity();
       return ConstraintXd(S);
     }
-
-    Eigen::Matrix <double,6,3> se3Action (const SE3 & m) const
+    
+    template<typename SE3Scalar, int SE3Options>
+    SE3ActionReturnType SE3ActOn(const SE3Tpl<SE3Scalar,SE3Options> & M) const
     {
-      Eigen::Matrix <double,6,3> X_subspace;
-      X_subspace.block <3,3> (Motion::LINEAR, 0) = skew (m.translation ()) * m.rotation ();
-      X_subspace.block <3,3> (Motion::ANGULAR, 0) = m.rotation ();
+      SE3ActionReturnType X_subspace;
+      for(int k=0; k<3; ++k)
+        X_subspace.middleRows <3> (Motion::LINEAR).col(k) = M.translation().cross(M.rotation().col(k));
+      X_subspace.middleRows <3> (Motion::ANGULAR) = M.rotation();
 
       return X_subspace;
     }
 
   }; // struct ConstraintRotationalSubspace
 
-  template<typename D>
-  Motion operator* (const ConstraintRotationalSubspace&, const Eigen::MatrixBase<D>& v)
+  template<typename EigenDerived>
+  Motion operator* (const ConstraintRotationalSubspace&, const Eigen::MatrixBase<EigenDerived> & v)
   {
-    EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(D,3);
-    return Motion (Motion::Vector3::Zero (), v);
+    EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(EigenDerived,3);
+    return Motion (Motion::Vector3::Zero (),v);
   }
 
 
@@ -190,12 +210,12 @@ namespace se3
     return M;
   }
 
-  namespace internal
-  {
-    template<>
-    struct ActionReturn<ConstraintRotationalSubspace >
-    { typedef Eigen::Matrix<double,6,3> Type; };
-  }
+//  namespace internal
+//  {
+//    template<>
+//    struct ActionReturn<ConstraintRotationalSubspace >
+//    { typedef Eigen::Matrix<double,6,3> Type; };
+//  }
 
   struct JointSpherical;
   template<>
@@ -296,13 +316,13 @@ namespace se3
       data.U = I.block<6,3> (0,Inertia::ANGULAR);
       data.Dinv = I.block<3,3> (Inertia::ANGULAR,Inertia::ANGULAR).inverse();
       data.UDinv.middleRows<3> (Inertia::ANGULAR).setIdentity(); // can be put in data constructor
-      data.UDinv.middleRows<3> (Inertia::LINEAR) = data.U.block<3,3> (Inertia::LINEAR, 0) * data.Dinv;
+      data.UDinv.middleRows<3> (Inertia::LINEAR).noalias() = data.U.block<3,3> (Inertia::LINEAR, 0) * data.Dinv;
       
       if (update_I)
       {
         I.block<6,3> (0,Inertia::ANGULAR).setZero();
         I.block<3,3> (Inertia::ANGULAR,Inertia::LINEAR).setZero();
-        I.block<3,3> (Inertia::LINEAR,Inertia::LINEAR) -= data.UDinv.middleRows<3> (Inertia::LINEAR) * I.block<3,3> (Inertia::ANGULAR, Inertia::LINEAR);
+        I.block<3,3> (Inertia::LINEAR,Inertia::LINEAR).noalias() -= data.UDinv.middleRows<3> (Inertia::LINEAR) * I.block<3,3> (Inertia::ANGULAR, Inertia::LINEAR);
       }
     }
 

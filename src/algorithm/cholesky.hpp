@@ -42,7 +42,7 @@ namespace se3
     ///
     /// \return A reference to the upper triangular matrix \f$U\f$.
     ///
-    inline const Eigen::MatrixXd &
+    inline const Data::MassMatrix &
     decompose(const Model & model,
               Data & data);
 
@@ -59,8 +59,8 @@ namespace se3
     /// \param[inout] y The input matrix to inverse which also contains the result \f$x\f$ of the inversion.
     ///
     template<typename Mat>
-    Mat & solve(const Model & model, const Data & data,
-                Eigen::MatrixBase<Mat> & y);
+    inline Mat & solve(const Model & model, const Data & data,
+                       Eigen::MatrixBase<Mat> & y);
 
     ///
     /// \brief Perform the multiplication \f$ M v \f$ either by using computed Cholesky decomposition or from raw computation.
@@ -73,9 +73,9 @@ namespace se3
     /// \return A reference to the result of \f$ Mv \f$.
     ///
     template<typename Mat>
-    Mat & Mv(const Model & model, const Data & data ,
-             Eigen::MatrixBase<Mat> & v,
-             const bool usingCholesky = false);
+    inline Mat & Mv(const Model & model, const Data & data ,
+                    Eigen::MatrixBase<Mat> & v,
+                    const bool usingCholesky = false);
     
     ///
     /// \brief Perform the sparse multiplication \f$ Uv \f$ using the Cholesky decomposition stored in data and acting in place.
@@ -87,9 +87,9 @@ namespace se3
     /// \return A reference to the result of \f$ Uv \f$ stored in v.
     ///
     template<typename Mat>
-    Mat & Uv(const Model & model,
-             const Data & data,
-             Eigen::MatrixBase<Mat> & v);
+    inline Mat & Uv(const Model & model,
+                    const Data & data,
+                    Eigen::MatrixBase<Mat> & v);
     
     ///
     /// \brief Perform the sparse multiplication \f$ U^{\top}v \f$ using the Cholesky decomposition stored in data and acting in place.
@@ -101,9 +101,9 @@ namespace se3
     /// \return A reference to the result of \f$ U^{\top}v \f$ stored in v.
     ///
     template<typename Mat>
-    Mat & Utv(const Model & model,
-              const Data & data,
-              Eigen::MatrixBase<Mat> & v);
+    inline Mat & Utv(const Model & model,
+                     const Data & data,
+                     Eigen::MatrixBase<Mat> & v);
     
     ///
     /// \brief Perform the pivot inversion \f$ U^{-1}v \f$ using the Cholesky decomposition stored in data and acting in place.
@@ -117,9 +117,9 @@ namespace se3
     /// \remark The result is similar to the code data.U.triangularView<Eigen::Upper> ().solveInPlace(v).
     ///
     template<typename Mat>
-    Mat & Uiv(const Model & model,
-              const Data & data ,
-              Eigen::MatrixBase<Mat> & v);
+    inline Mat & Uiv(const Model & model,
+                     const Data & data ,
+                     Eigen::MatrixBase<Mat> & v);
     
     ///
     /// \brief Perform the pivot inversion \f$ U^{-\top}v \f$ using the Cholesky decomposition stored in data and acting in place.
@@ -133,9 +133,9 @@ namespace se3
     /// \remark The result is similar to the code data.U.triangularView<Eigen::Upper> ().transpose().solveInPlace(v).
     ///
     template<typename Mat>
-    Mat & Utiv(const Model & model,
-               const Data & data ,
-               Eigen::MatrixBase<Mat> & v);
+    inline Mat & Utiv(const Model & model,
+                      const Data & data ,
+                      Eigen::MatrixBase<Mat> & v);
     
     ///
     /// \brief Perform the sparse inversion \f$ M^{-1}v \f$ using the Cholesky decomposition stored in data and acting in place.
@@ -147,9 +147,9 @@ namespace se3
     /// \return A reference to the result of \f$ M^{-1}v \f$ stored in v.
     ///
     template<typename Mat>
-    Mat & solve(const Model & model,
-                const Data & data ,
-                Eigen::MatrixBase<Mat> & v);
+    inline Mat & solve(const Model & model,
+                       const Data & data ,
+                       Eigen::MatrixBase<Mat> & v);
 
   } // namespace cholesky  
 } // namespace se3 

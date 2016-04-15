@@ -156,6 +156,38 @@ namespace se3
 #define SE3_JOINT_TYPEDEF_TEMPLATE SE3_JOINT_TYPEDEF_ARG()
 
 #endif
+  
+#define SE3_JOINT_DATA_REF_MODEL \
+  const JointModel & jmodel; \
+  JointData & operator=(const JointData & other) \
+  { \
+    assert(&jmodel == &other.jmodel && "JointData must have the same model."); \
+    S = other.S; \
+    M = other.M; \
+    v = other.v; \
+    c = other.c; \
+    F = other.F; \
+    U = other.U; \
+    Dinv = other.Dinv; \
+    UDinv = other.UDinv; \
+    return *this; \
+  }
+  
+#define SE3_JOINT_DATA_MODEL \
+  JointModel jmodel; \
+  JointData & operator=(const JointData & other) \
+  { \
+    S = other.S; \
+    M = other.M; \
+    v = other.v; \
+    c = other.c; \
+    F = other.F; \
+    U = other.U; \
+    Dinv = other.Dinv; \
+    UDinv = other.UDinv; \
+    jmodel = other.jmodel; \
+    return *this; \
+  }
 
 #define SE3_JOINT_USE_INDEXES \
   typedef JointModelBase<JointModel> Base; \
@@ -175,6 +207,7 @@ namespace se3
     
     typedef typename traits<_JointData>::Joint Joint;
     SE3_JOINT_TYPEDEF_TEMPLATE;
+    
 
     JointData& derived() { return *static_cast<JointData*>(this); }
     const JointData& derived() const { return *static_cast<const JointData*>(this); }

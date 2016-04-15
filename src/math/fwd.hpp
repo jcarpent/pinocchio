@@ -25,5 +25,4 @@ namespace se3
   const double PI = boost::math::constants::pi<double>();
 }
 
-
 #endif //#ifndef __math_fwd_hpp__

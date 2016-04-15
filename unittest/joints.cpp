@@ -100,8 +100,8 @@ BOOST_AUTO_TEST_CASE ( test_kinematics )
 
   BOOST_CHECK (expected_configuration.rotation ().isApprox(joint_data.M.rotation(), 1e-12));
   BOOST_CHECK (expected_configuration.translation ().isApprox(joint_data.M.translation (), 1e-12));
-  BOOST_CHECK (expected_v_J.toVector ().isApprox(((Motion) joint_data.v).toVector(), 1e-12));
-  BOOST_CHECK (expected_c_J.toVector ().isApprox(((Motion) joint_data.c).toVector(), 1e-12));
+  BOOST_CHECK (expected_v_J.coeffs ().isApprox(((Motion) joint_data.v).coeffs(), 1e-12));
+  BOOST_CHECK (expected_c_J.coeffs ().isApprox(((Motion) joint_data.c).coeffs(), 1e-12));
 
   // -------
   q = Vector3 (1., 0., 0.);
@@ -120,8 +120,8 @@ BOOST_AUTO_TEST_CASE ( test_kinematics )
 
   BOOST_CHECK (expected_configuration.rotation ().isApprox(joint_data.M.rotation(), 1e-12));
   BOOST_CHECK (expected_configuration.translation ().isApprox(joint_data.M.translation (), 1e-12));
-  BOOST_CHECK (expected_v_J.toVector ().isApprox(((Motion) joint_data.v).toVector(), 1e-12));
-  BOOST_CHECK (expected_c_J.toVector ().isApprox(((Motion) joint_data.c).toVector(), 1e-12));
+  BOOST_CHECK (expected_v_J.coeffs ().isApprox(((Motion) joint_data.v).coeffs(), 1e-12));
+  BOOST_CHECK (expected_c_J.coeffs ().isApprox(((Motion) joint_data.c).coeffs(), 1e-12));
 
   // -------
   q = Vector3 (0., 1., 0.);
@@ -140,8 +140,8 @@ BOOST_AUTO_TEST_CASE ( test_kinematics )
 
   BOOST_CHECK (expected_configuration.rotation ().isApprox(joint_data.M.rotation(), 1e-12));
   BOOST_CHECK (expected_configuration.translation ().isApprox(joint_data.M.translation (), 1e-12));
-  BOOST_CHECK (expected_v_J.toVector ().isApprox(((Motion) joint_data.v).toVector(), 1e-12));
-  BOOST_CHECK (expected_c_J.toVector ().isApprox(((Motion) joint_data.c).toVector(), 1e-12));
+  BOOST_CHECK (expected_v_J.coeffs ().isApprox(((Motion) joint_data.v).coeffs(), 1e-12));
+  BOOST_CHECK (expected_c_J.coeffs ().isApprox(((Motion) joint_data.c).coeffs(), 1e-12));
 
   // -------
   q = Vector3 (0., 0., 1.);
@@ -160,8 +160,8 @@ BOOST_AUTO_TEST_CASE ( test_kinematics )
 
   BOOST_CHECK (expected_configuration.rotation ().isApprox(joint_data.M.rotation(), 1e-12));
   BOOST_CHECK (expected_configuration.translation ().isApprox(joint_data.M.translation (), 1e-12));
-  BOOST_CHECK (expected_v_J.toVector ().isApprox(((Motion) joint_data.v).toVector(), 1e-12));
-  BOOST_CHECK (expected_c_J.toVector ().isApprox(((Motion) joint_data.c).toVector(), 1e-12));
+  BOOST_CHECK (expected_v_J.coeffs ().isApprox(((Motion) joint_data.v).coeffs(), 1e-12));
+  BOOST_CHECK (expected_c_J.coeffs ().isApprox(((Motion) joint_data.c).coeffs(), 1e-12));
 
   // -------
   q = Vector3 (1., 1., 1.);
@@ -181,8 +181,8 @@ BOOST_AUTO_TEST_CASE ( test_kinematics )
 
   BOOST_CHECK (expected_configuration.rotation ().isApprox(joint_data.M.rotation(), 1e-12));
   BOOST_CHECK (expected_configuration.translation ().isApprox(joint_data.M.translation (), 1e-12));
-  BOOST_CHECK (expected_v_J.toVector ().isApprox(((Motion) joint_data.v).toVector(), 1e-12));
-  BOOST_CHECK (expected_c_J.toVector ().isApprox(((Motion) joint_data.c).toVector(), 1e-12));
+  BOOST_CHECK (expected_v_J.coeffs ().isApprox(((Motion) joint_data.v).coeffs(), 1e-12));
+  BOOST_CHECK (expected_c_J.coeffs ().isApprox(((Motion) joint_data.c).coeffs(), 1e-12));
 
   // -------
   q = Vector3 (1., 1.5, 1.9);
@@ -202,8 +202,8 @@ BOOST_AUTO_TEST_CASE ( test_kinematics )
 
   BOOST_CHECK (expected_configuration.rotation ().isApprox(joint_data.M.rotation(), 1e-12));
   BOOST_CHECK (expected_configuration.translation ().isApprox(joint_data.M.translation (), 1e-12));
-  BOOST_CHECK (expected_v_J.toVector ().isApprox(((Motion) joint_data.v).toVector(), 1e-12));
-  BOOST_CHECK (expected_c_J.toVector ().isApprox(((Motion) joint_data.c).toVector(), 1e-12));
+  BOOST_CHECK (expected_v_J.coeffs ().isApprox(((Motion) joint_data.v).coeffs(), 1e-12));
+  BOOST_CHECK (expected_c_J.coeffs ().isApprox(((Motion) joint_data.c).coeffs(), 1e-12));
 }
 
 BOOST_AUTO_TEST_CASE ( test_rnea )
@@ -326,8 +326,8 @@ BOOST_AUTO_TEST_CASE ( test_kinematics )
 
   BOOST_CHECK (expected_configuration.rotation ().isApprox(joint_data.M.rotation(), 1e-12));
   BOOST_CHECK (expected_configuration.translation ().isApprox(joint_data.M.translation (), 1e-12));
-  BOOST_CHECK (expected_v_J.toVector ().isApprox(((Motion) joint_data.v).toVector(), 1e-12));
-  BOOST_CHECK (expected_c_J.toVector ().isApprox(((Motion) joint_data.c).toVector(), 1e-12));
+  BOOST_CHECK (expected_v_J.coeffs ().isApprox(((Motion) joint_data.v).coeffs(), 1e-12));
+  BOOST_CHECK (expected_c_J.coeffs ().isApprox(((Motion) joint_data.c).coeffs(), 1e-12));
 
   // -------
   q << 1.;
@@ -344,8 +344,8 @@ BOOST_AUTO_TEST_CASE ( test_kinematics )
 
   BOOST_CHECK (expected_configuration.rotation ().isApprox(joint_data.M.rotation(), 1e-12));
   BOOST_CHECK (expected_configuration.translation ().isApprox(joint_data.M.translation (), 1e-12));
-  BOOST_CHECK (expected_v_J.toVector ().isApprox(((Motion) joint_data.v).toVector(), 1e-12));
-  BOOST_CHECK (expected_c_J.toVector ().isApprox(((Motion) joint_data.c).toVector(), 1e-12));
+  BOOST_CHECK (expected_v_J.coeffs ().isApprox(((Motion) joint_data.v).coeffs(), 1e-12));
+  BOOST_CHECK (expected_c_J.coeffs ().isApprox(((Motion) joint_data.c).coeffs(), 1e-12));
 }
 
 BOOST_AUTO_TEST_CASE ( test_rnea )
@@ -460,8 +460,8 @@ BOOST_AUTO_TEST_CASE ( test_kinematics )
 
   BOOST_CHECK (expected_configuration.rotation ().isApprox(joint_data.M.rotation(), 1e-12));
   BOOST_CHECK (expected_configuration.translation ().isApprox(joint_data.M.translation (), 1e-12));
-  BOOST_CHECK (expected_v_J.toVector ().isApprox(((Motion) joint_data.v).toVector(), 1e-12));
-  BOOST_CHECK (expected_c_J.toVector ().isApprox(((Motion) joint_data.c).toVector(), 1e-12));
+  BOOST_CHECK (expected_v_J.coeffs ().isApprox(((Motion) joint_data.v).coeffs(), 1e-12));
+  BOOST_CHECK (expected_c_J.coeffs ().isApprox(((Motion) joint_data.c).coeffs(), 1e-12));
 
   // -------
   q = Vector3 (1., 0., 0.);
@@ -477,8 +477,8 @@ BOOST_AUTO_TEST_CASE ( test_kinematics )
 
   BOOST_CHECK (expected_configuration.rotation ().isApprox(joint_data.M.rotation(), 1e-12));
   BOOST_CHECK (expected_configuration.translation ().isApprox(joint_data.M.translation (), 1e-12));
-  BOOST_CHECK (expected_v_J.toVector ().isApprox(((Motion) joint_data.v).toVector(), 1e-12));
-  BOOST_CHECK (expected_c_J.toVector ().isApprox(((Motion) joint_data.c).toVector(), 1e-12));
+  BOOST_CHECK (expected_v_J.coeffs ().isApprox(((Motion) joint_data.v).coeffs(), 1e-12));
+  BOOST_CHECK (expected_c_J.coeffs ().isApprox(((Motion) joint_data.c).coeffs(), 1e-12));
 
   // -------
   q = Vector3 (0., 1., 0.);
@@ -494,8 +494,8 @@ BOOST_AUTO_TEST_CASE ( test_kinematics )
 
   BOOST_CHECK (expected_configuration.rotation ().isApprox(joint_data.M.rotation(), 1e-12));
   BOOST_CHECK (expected_configuration.translation ().isApprox(joint_data.M.translation (), 1e-12));
-  BOOST_CHECK (expected_v_J.toVector ().isApprox(((Motion) joint_data.v).toVector(), 1e-12));
-  BOOST_CHECK (expected_c_J.toVector ().isApprox(((Motion) joint_data.c).toVector(), 1e-12));
+  BOOST_CHECK (expected_v_J.coeffs ().isApprox(((Motion) joint_data.v).coeffs(), 1e-12));
+  BOOST_CHECK (expected_c_J.coeffs ().isApprox(((Motion) joint_data.c).coeffs(), 1e-12));
 
   // -------
   q = Vector3 (0., 0., 1.);
@@ -511,8 +511,8 @@ BOOST_AUTO_TEST_CASE ( test_kinematics )
 
   BOOST_CHECK (expected_configuration.rotation ().isApprox(joint_data.M.rotation(), 1e-12));
   BOOST_CHECK (expected_configuration.translation ().isApprox(joint_data.M.translation (), 1e-12));
-  BOOST_CHECK (expected_v_J.toVector ().isApprox(((Motion) joint_data.v).toVector(), 1e-12));
-  BOOST_CHECK (expected_c_J.toVector ().isApprox(((Motion) joint_data.c).toVector(), 1e-12));
+  BOOST_CHECK (expected_v_J.coeffs ().isApprox(((Motion) joint_data.v).coeffs(), 1e-12));
+  BOOST_CHECK (expected_c_J.coeffs ().isApprox(((Motion) joint_data.c).coeffs(), 1e-12));
 
   // -------
   q = Vector3 (1., 1., 1.);
@@ -527,8 +527,8 @@ BOOST_AUTO_TEST_CASE ( test_kinematics )
 
   BOOST_CHECK (expected_configuration.rotation ().isApprox(joint_data.M.rotation(), 1e-12));
   BOOST_CHECK (expected_configuration.translation ().isApprox(joint_data.M.translation (), 1e-12));
-  BOOST_CHECK (expected_v_J.toVector ().isApprox(((Motion) joint_data.v).toVector(), 1e-12));
-  BOOST_CHECK (expected_c_J.toVector ().isApprox(((Motion) joint_data.c).toVector(), 1e-12));
+  BOOST_CHECK (expected_v_J.coeffs ().isApprox(((Motion) joint_data.v).coeffs(), 1e-12));
+  BOOST_CHECK (expected_c_J.coeffs ().isApprox(((Motion) joint_data.c).coeffs(), 1e-12));
 
   // -------
   q = Vector3 (1., 1.5, 1.9);
@@ -543,8 +543,8 @@ BOOST_AUTO_TEST_CASE ( test_kinematics )
 
   BOOST_CHECK (expected_configuration.rotation ().isApprox(joint_data.M.rotation(), 1e-12));
   BOOST_CHECK (expected_configuration.translation ().isApprox(joint_data.M.translation (), 1e-12));
-  BOOST_CHECK (expected_v_J.toVector ().isApprox(((Motion) joint_data.v).toVector(), 1e-12));
-  BOOST_CHECK (expected_c_J.toVector ().isApprox(((Motion) joint_data.c).toVector(), 1e-12));
+  BOOST_CHECK (expected_v_J.coeffs ().isApprox(((Motion) joint_data.v).coeffs(), 1e-12));
+  BOOST_CHECK (expected_c_J.coeffs ().isApprox(((Motion) joint_data.c).coeffs(), 1e-12));
 }
 
 BOOST_AUTO_TEST_CASE ( test_rnea )
@@ -660,8 +660,8 @@ BOOST_AUTO_TEST_CASE ( test_kinematics )
 
   BOOST_CHECK (expected_configuration.rotation ().isApprox(joint_data.M.rotation(), 1e-12));
   BOOST_CHECK (expected_configuration.translation ().isApprox(joint_data.M.translation (), 1e-12));
-  BOOST_CHECK (expected_v_J.toVector ().isApprox(((Motion) joint_data.v).toVector(), 1e-12));
-  BOOST_CHECK (expected_c_J.toVector ().isApprox(((Motion) joint_data.c).toVector(), 1e-12));
+  BOOST_CHECK (expected_v_J.coeffs ().isApprox(((Motion) joint_data.v).coeffs(), 1e-12));
+  BOOST_CHECK (expected_c_J.coeffs ().isApprox(((Motion) joint_data.c).coeffs(), 1e-12));
 
   // -------
   q = Vector4 (1., 0, 0., 1.); q.normalize();
@@ -680,8 +680,8 @@ BOOST_AUTO_TEST_CASE ( test_kinematics )
 
   BOOST_CHECK (expected_configuration.rotation ().isApprox(joint_data.M.rotation(), 1e-12));
   BOOST_CHECK (expected_configuration.translation ().isApprox(joint_data.M.translation (), 1e-12));
-  BOOST_CHECK (expected_v_J.toVector ().isApprox(((Motion) joint_data.v).toVector(), 1e-12));
-  BOOST_CHECK (expected_c_J.toVector ().isApprox(((Motion) joint_data.c).toVector(), 1e-12));
+  BOOST_CHECK (expected_v_J.coeffs ().isApprox(((Motion) joint_data.v).coeffs(), 1e-12));
+  BOOST_CHECK (expected_c_J.coeffs ().isApprox(((Motion) joint_data.c).coeffs(), 1e-12));
 
   // -------
   q = Vector4 (0., 1., 0., 1.); q.normalize();
@@ -700,8 +700,8 @@ BOOST_AUTO_TEST_CASE ( test_kinematics )
 
   BOOST_CHECK (expected_configuration.rotation ().isApprox(joint_data.M.rotation(), 1e-12));
   BOOST_CHECK (expected_configuration.translation ().isApprox(joint_data.M.translation (), 1e-12));
-  BOOST_CHECK (expected_v_J.toVector ().isApprox(((Motion) joint_data.v).toVector(), 1e-12));
-  BOOST_CHECK (expected_c_J.toVector ().isApprox(((Motion) joint_data.c).toVector(), 1e-12));
+  BOOST_CHECK (expected_v_J.coeffs ().isApprox(((Motion) joint_data.v).coeffs(), 1e-12));
+  BOOST_CHECK (expected_c_J.coeffs ().isApprox(((Motion) joint_data.c).coeffs(), 1e-12));
 
   // -------
   q = Vector4 (0., 0, 1., 1.); q.normalize();
@@ -720,8 +720,8 @@ BOOST_AUTO_TEST_CASE ( test_kinematics )
 
   BOOST_CHECK (expected_configuration.rotation ().isApprox(joint_data.M.rotation(), 1e-12));
   BOOST_CHECK (expected_configuration.translation ().isApprox(joint_data.M.translation (), 1e-12));
-  BOOST_CHECK (expected_v_J.toVector ().isApprox(((Motion) joint_data.v).toVector(), 1e-12));
-  BOOST_CHECK (expected_c_J.toVector ().isApprox(((Motion) joint_data.c).toVector(), 1e-12));
+  BOOST_CHECK (expected_v_J.coeffs ().isApprox(((Motion) joint_data.v).coeffs(), 1e-12));
+  BOOST_CHECK (expected_c_J.coeffs ().isApprox(((Motion) joint_data.c).coeffs(), 1e-12));
 
   // -------
   q = Vector4 (1., 1., 1., 1.); q.normalize();
@@ -740,8 +740,8 @@ BOOST_AUTO_TEST_CASE ( test_kinematics )
 
   BOOST_CHECK (expected_configuration.rotation ().isApprox(joint_data.M.rotation(), 1e-12));
   BOOST_CHECK (expected_configuration.translation ().isApprox(joint_data.M.translation (), 1e-12));
-  BOOST_CHECK (expected_v_J.toVector ().isApprox(((Motion) joint_data.v).toVector(), 1e-12));
-  BOOST_CHECK (expected_c_J.toVector ().isApprox(((Motion) joint_data.c).toVector(), 1e-12));
+  BOOST_CHECK (expected_v_J.coeffs ().isApprox(((Motion) joint_data.v).coeffs(), 1e-12));
+  BOOST_CHECK (expected_c_J.coeffs ().isApprox(((Motion) joint_data.c).coeffs(), 1e-12));
 
   // -------
   q = Vector4 (1., 1.5, 1.9, 1.); q.normalize();
@@ -760,8 +760,8 @@ BOOST_AUTO_TEST_CASE ( test_kinematics )
 
   BOOST_CHECK (expected_configuration.rotation ().isApprox(joint_data.M.rotation(), 1e-12));
   BOOST_CHECK (expected_configuration.translation ().isApprox(joint_data.M.translation (), 1e-12));
-  BOOST_CHECK (expected_v_J.toVector ().isApprox(((Motion) joint_data.v).toVector(), 1e-12));
-  BOOST_CHECK (expected_c_J.toVector ().isApprox(((Motion) joint_data.c).toVector(), 1e-12));
+  BOOST_CHECK (expected_v_J.coeffs ().isApprox(((Motion) joint_data.v).coeffs(), 1e-12));
+  BOOST_CHECK (expected_c_J.coeffs ().isApprox(((Motion) joint_data.c).coeffs(), 1e-12));
 }
 
 BOOST_AUTO_TEST_CASE ( test_rnea )
@@ -844,6 +844,42 @@ BOOST_AUTO_TEST_CASE ( test_crba )
 
 BOOST_AUTO_TEST_SUITE_END ()
 
+BOOST_AUTO_TEST_SUITE ( JointRevoluteRX )
+
+BOOST_AUTO_TEST_CASE (test_motion)
+{
+  using namespace se3;
+  
+  JointModelRX joint_model_RX;
+  JointDataRX joint_data_RX;
+  
+  SE3Revolute<0> SE3_revolute(M_PI/4.);
+  
+  MotionRevolute<0> motion_revolute (1.);
+  Motion motion_revolute_dense (Motion::Vector3::Zero(), Motion::Vector3(1.,0.,0.));
+  
+  Motion motion_dense (Motion::Vector3::Ones(), Motion::Vector3::Zero());
+  
+  Motion m1, m2, m3(motion_revolute);
+  
+  m1 = motion_revolute + motion_dense;
+  m2 = motion_dense + motion_revolute;
+  
+  Motion m4, m5;
+  
+  m4 = motion_revolute - motion_dense;
+  m5 = motion_dense - motion_revolute;
+  
+  BOOST_CHECK(m1.coeffs().isApprox(m2.coeffs(),1e-12)); // check commutativity of the addition
+  BOOST_CHECK(m3.coeffs().isApprox(motion_revolute_dense.coeffs(),1e-12)); // check the operator MotionDense()
+  
+  
+  BOOST_CHECK(m4.coeffs().isApprox(-m5.coeffs(),1e-12)); // check the sub operator
+  
+}
+
+BOOST_AUTO_TEST_SUITE_END ()
+
 
 BOOST_AUTO_TEST_SUITE ( JointRevoluteUnaligned )
 
@@ -877,13 +913,13 @@ BOOST_AUTO_TEST_CASE ( test_kinematics )
   printOutJointData <JointDataRevoluteUnaligned> (q, q_dot, joint_data_RU);
 
   BOOST_CHECK (joint_data_RU.M.rotation()
-              .isApprox(joint_data_RX.M.rotation(), 1e-12));
+              .isApprox(joint_data_RX.M.dense().rotation(), 1e-12));
   BOOST_CHECK (joint_data_RU.M.translation ()
-              .isApprox(joint_data_RX.M.translation (), 1e-12));
-  BOOST_CHECK (((Motion) joint_data_RU.v).toVector()
-              .isApprox(((Motion) joint_data_RX.v).toVector(), 1e-12));
-  BOOST_CHECK (((Motion) joint_data_RU.c).toVector()
-              .isApprox(((Motion) joint_data_RX.c).toVector(), 1e-12));
+              .isApprox(joint_data_RX.M.dense().translation (), 1e-12));
+  BOOST_CHECK (((Motion) joint_data_RU.v).coeffs()
+              .isApprox(((Motion) joint_data_RX.v).coeffs(), 1e-12));
+  BOOST_CHECK (((Motion) joint_data_RU.c).coeffs()
+              .isApprox(((Motion) joint_data_RX.c).coeffs(), 1e-12));
 
 }
 
@@ -1023,10 +1059,10 @@ BOOST_AUTO_TEST_CASE ( test_kinematics )
                 .isApprox(joint_data_PX.M.rotation(), 1e-12));
   BOOST_CHECK (joint_data_PU.M.translation ()
                 .isApprox(joint_data_PX.M.translation (), 1e-12));
-  BOOST_CHECK (((Motion) joint_data_PU.v).toVector()
-                .isApprox(((Motion) joint_data_PX.v).toVector(), 1e-12));
-  BOOST_CHECK (((Motion) joint_data_PU.c).toVector()
-                .isApprox(((Motion) joint_data_PX.c).toVector(), 1e-12));
+  BOOST_CHECK (((Motion) joint_data_PU.v).coeffs()
+                .isApprox(((Motion) joint_data_PX.v).coeffs(), 1e-12));
+  BOOST_CHECK (((Motion) joint_data_PU.c).coeffs()
+                .isApprox(((Motion) joint_data_PX.c).coeffs(), 1e-12));
   
 }
 
@@ -1249,7 +1285,7 @@ BOOST_AUTO_TEST_CASE (vsFreeFlyer)
   BOOST_CHECK(dataFreeFlyer.oMi[1].isApprox(dataPlanar.oMi[1]));
   BOOST_CHECK(dataFreeFlyer.liMi[1].isApprox(dataPlanar.liMi[1]));
   BOOST_CHECK(dataFreeFlyer.Ycrb[1].matrix().isApprox(dataPlanar.Ycrb[1].matrix()));
-  BOOST_CHECK(dataFreeFlyer.f[1].toVector().isApprox(dataPlanar.f[1].toVector()));
+  BOOST_CHECK(dataFreeFlyer.f[1].coeffs().isApprox(dataPlanar.f[1].coeffs()));
   
   Eigen::VectorXd nle_expected_ff(3); nle_expected_ff << dataFreeFlyer.nle[0],
                                                          dataFreeFlyer.nle[1],

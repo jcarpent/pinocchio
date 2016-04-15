@@ -21,66 +21,146 @@
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
-#include "pinocchio/spatial/fwd.hpp"
-#include "pinocchio/spatial/force.hpp"
+#include "pinocchio/spatial/spatial.hpp"
 
 namespace se3
 {
+  
+  template<class Derived>
+  struct traits< MotionBase<Derived> >
+  {
+    typedef Derived SE3ActionReturnType;
+  };
 
-
-  template< class Derived>
-  class MotionBase
+  template<class Derived>
+  class MotionBase : public SpatialBase<Derived>
   {
   protected:
-    typedef Derived  Derived_t;
-    SPATIAL_TYPEDEF_TEMPLATE(Derived_t);
+    SPATIAL_TYPEDEF_TEMPLATE(Derived);
     
   public:
-    Derived_t & derived() { return *static_cast<Derived_t*>(this); }
-    const Derived_t& derived() const { return *static_cast<const Derived_t*>(this); }
-
-    ConstAngular_t angular() const  { return static_cast<const Derived_t*>(this)->angular_impl(); }
-    ConstLinear_t linear() const  { return static_cast<const Derived_t*>(this)->linear_impl(); }
-    Angular_t angular()  { return static_cast<Derived_t*>(this)->angular_impl(); }
-    Linear_t linear()   { return static_cast<Derived_t*>(this)->linear_impl(); }
     
-    template<typename D>
-    void angular(const Eigen::MatrixBase<D> & w) { static_cast< Derived_t*>(this)->angular_impl(w); }
-    template<typename D>
-    void linear(const Eigen::MatrixBase<D> & v) { static_cast< Derived_t*>(this)->linear_impl(v); }
+    typedef SpatialBase<Derived> Base;
+    using Base::derived;
 
-    const Vector6 & toVector() const { return derived().toVector_impl(); }
-    Vector6 & toVector() { return derived().toVector_impl(); }
-    operator Vector6 () const { return toVector(); }
-
-    ActionMatrix_t toActionMatrix() const { return derived().toActionMatrix_impl(); }
-    operator Matrix6 () const { return toActionMatrix(); }
-
-    bool operator== (const Derived_t & other) const {return derived().isEqual(other);}
-    Derived_t operator-() const { return derived().__minus__(); }
-    Derived_t operator+(const Derived_t & v2) const { return derived().__plus__(v2); }
-    Derived_t operator-(const Derived_t & v2) const { return derived().__minus__(v2); }
-    Derived_t & operator+=(const Derived_t & v2) { return derived().__pequ__(v2); }
-
-    Derived_t se3Action(const SE3 & m) const { return derived().se3Action_impl(m); }
-    Derived_t se3ActionInverse(const SE3 & m) const { return derived().se3ActionInverse_impl(m); }
+//    ConstAngular_t angular() const  { return derived().angular_impl(); }
+//    ConstLinear_t linear() const  { return derived().linear_impl(); }
+//    Angular_t angular()  { return derived().angular_impl(); }
+//    Linear_t linear()   { return derived().linear_impl(); }
     
-    Scalar_t dot(const Force & f) const { return static_cast<Derived_t*>(this)->dot(f); }
+//    template<typename D>
+//    void angular(const Eigen::MatrixBase<D> & w) { derived().angular_impl(w); }
+//    template<typename D>
+//    void linear(const Eigen::MatrixBase<D> & v) { derived().linear_impl(v); }
 
-    void disp(std::ostream & os) const { derived().disp_impl(os); }
-    friend std::ostream & operator << (std::ostream & os, const MotionBase<Derived_t> & mv)
+//    const Vector6 & toVector() const { return derived().toVector_impl(); }
+//    Vector6 & toVector() { return derived().toVector_impl(); }
+//    operator Vector6 () const { return toVector(); }
+
+    inline ActionMatrix_t toActionMatrix() const { return derived().toActionMatrix_impl(); }
+    inline operator Matrix6 () const { return toActionMatrix(); }
+    
+    template<typename ForceDerived>
+    inline typename traits<Derived>::DotReturnType dot(const ForceBase<ForceDerived> & m) const
     {
-      mv.disp(os);
-      return os;
+      return derived().dot(m.derived());
     }
+    
+    template<typename OtherDerived>
+    inline bool operator== (const MotionBase<OtherDerived> & other) const
+    {
+      return derived().isEqual(other.derived());
+    }
+    
+    template<typename OtherDerived>
+    inline Derived & operator= (const MotionBase<OtherDerived> & other)
+    {
+      other.derived().setTo(derived());
+      return derived();
+    }
+    
+    template<typename OtherDerived>
+    inline Derived & operator+= (const MotionBase<OtherDerived> & other)
+    {
+      other.derived().addTo(derived());
+      return derived();
+    }
+    
+    template<typename OtherDerived>
+    inline Derived & operator-= (const MotionBase<OtherDerived> & other)
+    {
+      other.derived().subTo(derived());
+      return derived();
+    }
+    
+    template<typename OtherDerived>
+    inline Derived operator+ (const MotionBase<OtherDerived> & other) const
+    {
+      return derived().add(other.derived());
+    }
+    
+    template<typename OtherDerived>
+    inline Derived add (const MotionBase<OtherDerived> & other) const
+    {
+//      Derived dest = derived();
+//      other.derived().addTo(dest);
+//      return dest;
+      return derived().add(other.derived());
+    }
+
+    
+    template<typename OtherDerived>
+    inline Derived operator- (const MotionBase<OtherDerived> & other) const
+    {
+      return derived().sub(other.derived());
+    }
+    
+    template<typename OtherDerived>
+    inline Derived sub (const MotionBase<OtherDerived> & other) const
+    {
+      return derived().sub(other.derived());
+    }
+    
+    inline Derived operator- () const
+    {
+      return derived().opposite();
+    }
+
+//    template <typename OtherDerived>
+//    bool operator== (const MotionBase<OtherDerived> & other) const {return derived().isEqual(other);}
+//
+//    Derived operator-() const { return derived().__minus__(); }
+//    template <typename OtherDerived>
+//    Derived operator+(const MotionBase<OtherDerived> & v2) const { return derived().__plus__(v2); }
+//    template <typename OtherDerived>
+//    Derived operator-(const MotionBase<OtherDerived> & v2) const { return derived().__minus__(v2); }
+//    template <typename OtherDerived>
+//    Derived & operator+=(const MotionBase<OtherDerived> & v2) { return derived().__pequ__(v2); }
+    
+//    template <typename OtherDerived>
+//    void applyPlusEqual(MotionBase<OtherDerived> & other) const { derived().applyPlusEqual(other); }
+
+    template<typename ForceDerived>
+    ForceDerived cross(const ForceBase<ForceDerived> & f) const { return derived().cross(f.derived()); }
+    
+    template<typename OtherDerived>
+    OtherDerived cross(const MotionBase<OtherDerived> & m) const { return derived().cross(m.derived()); }
+    
+    static Derived Zero() { return Derived::Zero(); }
+    static Derived Random() { return Derived::Random(); }
+
 
   }; // class MotionBase
 
 
   template<typename T, int U>
-  struct traits< MotionTpl<T, U> >
+  struct traits< MotionTpl<T,U> > : traits < MotionBase< MotionTpl<T,U> > >
   {
     typedef T Scalar_t;
+    typedef MotionTpl<T,U> Type;
+    typedef traits< MotionBase<Type> > BaseTraits;
+    using typename BaseTraits::SE3ActionReturnType;
+    typedef T DotReturnType;
     typedef Eigen::Matrix<T,3,1,U> Vector3;
     typedef Eigen::Matrix<T,4,1,U> Vector4;
     typedef Eigen::Matrix<T,6,1,U> Vector6;
@@ -105,34 +185,41 @@ namespace se3
 
 
   template<typename _Scalar, int _Options>
-  class MotionTpl : public MotionBase< MotionTpl< _Scalar, _Options > >
+  class MotionTpl : public MotionBase< MotionTpl<_Scalar,_Options> >
   {
   public:
+    typedef MotionTpl Derived;
+    
     SPATIAL_TYPEDEF_TEMPLATE(MotionTpl);
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     
   public:
+    typedef class MotionBase< MotionTpl > Base;
+//    friend class MotionBase< MotionTpl<_Scalar,_Options> >;
+    typedef typename traits<MotionTpl>::SE3ActionReturnType SE3ActionReturnType;
+    
     // Constructors
     MotionTpl() : data() {}
 
-    template<typename v1,typename v2>
-    MotionTpl(const Eigen::MatrixBase<v1> & v, const Eigen::MatrixBase<v2> & w)
+    template<typename V3,typename W3>
+    MotionTpl(const Eigen::MatrixBase<V3> & v, const Eigen::MatrixBase<W3> & w)
     {
+      EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(V3,3);
+      EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(W3,3);
       data << v, w;
     }
 
-    template<typename v6>
-    explicit MotionTpl(const Eigen::MatrixBase<v6> & v)
+    template<typename V6>
+    MotionTpl(const Eigen::MatrixBase<V6> & v)
     : data(v)
     {
-      EIGEN_STATIC_ASSERT_VECTOR_ONLY(v6);
-      assert( v.size() == 6 );
+      EIGEN_STATIC_ASSERT_SAME_VECTOR_SIZE(Vector6,V6);
     }
 
 
-    template<typename S2,int O2>
-    explicit MotionTpl(const MotionTpl<S2,O2> & clone)
-    : data(clone.toVector())
+    template<typename OtherScalar, int OtherOptions>
+    MotionTpl(const MotionTpl<OtherScalar, OtherOptions> & clone)
+    : data(clone.coeffs())
     {}
 
     // initializers
@@ -142,85 +229,179 @@ namespace se3
     MotionTpl & setZero () { data.setZero (); return *this; }
     MotionTpl & setRandom () { data.setRandom (); return *this; }
 
-    const Vector6 & toVector_impl() const { return data; }
-    Vector6 & toVector_impl() { return data; }
+//    const Vector6 & toVector_impl() const { return data; }
+//    Vector6 & toVector_impl() { return data; }
 
-    ActionMatrix_t toActionMatrix_impl () const
+    inline ActionMatrix_t toActionMatrix_impl () const
     {
       ActionMatrix_t X;
-      X.block <3,3> (ANGULAR, ANGULAR) = X.block <3,3> (LINEAR, LINEAR) = skew (angular_impl());
-      X.block <3,3> (LINEAR, ANGULAR) = skew (linear_impl());
+      X.block <3,3> (ANGULAR, ANGULAR) = X.block <3,3> (LINEAR, LINEAR) = skew (angular());
+      X.block <3,3> (LINEAR, ANGULAR) = skew (linear());
       X.block <3,3> (ANGULAR, LINEAR).setZero ();
 
       return X;
     }
 
     // Getters
-    ConstAngular_t angular_impl() const { return data.template segment<3> (ANGULAR); }
-    ConstLinear_t linear_impl()  const { return data.template segment<3> (LINEAR); }
-    Angular_t angular_impl() { return data.template segment<3> (ANGULAR); }
-    Linear_t linear_impl()  { return data.template segment<3> (LINEAR); }
+    ConstAngular_t angular() const { return data.template segment<3> (ANGULAR); }
+    ConstLinear_t linear()  const { return data.template segment<3> (LINEAR); }
     
-    template<typename D>
-    void angular_impl(const Eigen::MatrixBase<D> & w) { data.template segment<3> (ANGULAR)=w; }
-    template<typename D>
-    void linear_impl(const Eigen::MatrixBase<D> & v) { data.template segment<3> (LINEAR)=v; }
-
-    bool isEqual (const MotionTpl & other) const { return data == other.data; }
+    Angular_t angular() { return data.template segment<3> (ANGULAR); }
+    Linear_t linear()  { return data.template segment<3> (LINEAR); }
     
-    // Arithmetic operators
-    template<typename S2, int O2>
-    MotionTpl & operator= (const MotionTpl<S2,O2> & other)
+    template<typename W3>
+    void angular(const Eigen::MatrixBase<W3> & w)
     {
-      data = other.toVector();
-      return *this;
+      EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(W3,3);
+      data.template segment<3> (ANGULAR) = w;
+    }
+    
+    template<typename V3>
+    void linear(const Eigen::MatrixBase<V3> & v)
+    {
+      EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(V3,3);
+      data.template segment<3> (LINEAR) = v;
     }
     
     template<typename V6>
-    MotionTpl & operator=(const Eigen::MatrixBase<V6> & v)
+    inline MotionTpl & operator= (const Eigen::MatrixBase<V6> & v)
     {
-      EIGEN_STATIC_ASSERT_VECTOR_ONLY(V6); assert(v.size() == 6);
+      EIGEN_STATIC_ASSERT_SAME_VECTOR_SIZE(Vector6,V6);
       data = v;
       return *this;
     }
-
-    MotionTpl __minus__() const { return MotionTpl(-data); }
-    MotionTpl __plus__(const MotionTpl & v2) const { return MotionTpl(data + v2.data); }
-    MotionTpl __minus__(const MotionTpl & v2) const { return MotionTpl(data - v2.data); }
-    MotionTpl& __pequ__(const MotionTpl & v2) { data += v2.data; return *this; }
     
-    Scalar_t dot(const Force & f) const { return data.dot(f.toVector()); }
-
-    MotionTpl cross(const MotionTpl& v2) const
+    template<typename OtherDerived>
+    inline bool isEqual (const MotionBase<OtherDerived> & other) const
     {
-      return MotionTpl( linear_impl().cross(v2.angular_impl())+angular_impl().cross(v2.linear_impl()),
-                        angular_impl().cross(v2.angular_impl()) );
+      return other.derived().isEqual(*this);
+    }
+    
+    template<typename OtherScalar, int OtherOptions>
+    inline bool isEqual (const MotionTpl<OtherScalar,OtherOptions> & other) const
+    {
+      return coeffs() == other.coeffs();
+    }
+    
+//    template<typename OtherDerived>
+//    void setTo (MotionBase<OtherDerived> &) const
+//    {
+//      PINOCCHIO_STATIC_ASSERT(true,YOU_CALLED_A_METHOD_WHICH_CANNOT_BE_APPLIED);
+//    }
+    
+    template<typename OtherScalar, int OtherOptions>
+    inline void setTo (MotionTpl<OtherScalar, OtherOptions> & dest) const
+    {
+      dest.coeffs() = data;
+    }
+    
+    template<typename OtherScalar, int OtherOptions>
+    inline void addTo (MotionTpl<OtherScalar, OtherOptions> & dest) const
+    {
+      dest.coeffs() += data;
+    }
+    
+    template<typename OtherScalar, int OtherOptions>
+    inline void subTo (MotionTpl<OtherScalar, OtherOptions> & dest) const
+    {
+      dest.coeffs() -= data;
+    }
+    
+    template<typename OtherDerived>
+    inline MotionTpl add (const MotionBase<OtherDerived> & other) const
+    {
+      MotionTpl dest (*this);
+      other.derived().addTo(dest);
+      return dest;
+    }
+    
+    template<typename OtherScalar, int OtherOptions>
+    inline MotionTpl add (const MotionTpl<OtherScalar, OtherOptions> & other) const
+    {
+      return MotionTpl(data + other.coeffs());
+    }
+    
+    template<typename OtherDerived>
+    inline MotionTpl sub (const MotionBase<OtherDerived> & other) const
+    {
+      MotionTpl dest (*this);
+      other.derived().subTo(dest);
+      return dest;
+    }
+    
+    template<typename OtherScalar, int OtherOptions>
+    inline MotionTpl sub (const MotionTpl<OtherScalar, OtherOptions> & other) const
+    {
+      return MotionTpl(data - other.coeffs());
+    }
+    
+    inline MotionTpl opposite () const
+    {
+      return MotionTpl(-data);
+    }
+    
+    template<typename SE3Scalar, int SE3Options>
+    inline SE3ActionReturnType SE3ActOn(const SE3Tpl<SE3Scalar,SE3Options> & M) const
+    {
+      Vector3 Rw (M.rotation() * angular());
+      return MotionTpl(M.rotation()*linear() + M.translation().cross(Rw),
+                       Rw);
+    }
+    
+    template<typename SE3Scalar, int SE3Options>
+    inline SE3ActionReturnType SE3InvActOn(const SE3Tpl<SE3Scalar,SE3Options> & M) const
+    {
+      return MotionTpl(M.rotation().transpose()*(linear()-M.translation().cross(angular())),
+                       M.rotation().transpose()*angular());
     }
 
-    Force cross(const Force& phi) const
+//    Derived __minus__() const { return MotionTpl(-data); }
+//    template <typename OtherDerived>
+//    Derived __plus__(const MotionBase<OtherDerived> & v2) const { return Derived(data + v2.toVector()); }
+//    template <typename OtherDerived>
+//    Derived __minus__(const MotionBase<OtherDerived> & v2) const { return Derived(data - v2.toVector()); }
+//    template <typename OtherDerived>
+//    Derived & __pequ__(const MotionBase<OtherDerived> & v2) { v2.applyPlusEqual(*this); return *this; }
+    
+    template<typename ForceDerived>
+    inline Scalar_t dot(const ForceBase<ForceDerived> & f) const
     {
-      return Force( angular_impl().cross(phi.linear_impl()),
-                    angular_impl().cross(phi.angular_impl())+linear_impl().cross(phi.linear_impl()) );
+      return f.derived().dot(*this);
+    }
+    
+    template<typename ForceScalar, int ForceOptions>
+    inline Scalar_t dot(const ForceTpl<ForceScalar, ForceOptions> & f) const
+    {
+      return data.dot(f.coeffs());
     }
 
-    MotionTpl se3Action_impl(const SE3 & m) const
+    template<typename OtherScalar, int OtherOptions>
+    inline MotionTpl cross(const MotionTpl<OtherScalar,OtherOptions> & other) const
     {
-      Vector3 Rw (static_cast<Vector3>(m.rotation() * angular_impl()));
-      return MotionTpl( m.rotation()*linear_impl() + m.translation().cross(Rw),
-                        Rw);
+      return MotionTpl(linear().cross(other.angular())+angular().cross(other.linear()),
+                       angular().cross(other.angular()) );
     }
-    /// bv = aXb.actInv(av)
-    MotionTpl se3ActionInverse_impl(const SE3 & m) const
+
+    template<typename ForceScalar, int ForceOptions>
+    inline ForceTpl<ForceScalar,ForceOptions> cross(const ForceTpl<ForceScalar,ForceOptions> & f) const
     {
-      return MotionTpl( m.rotation().transpose()*(linear_impl()-m.translation().cross(angular_impl())),
-                        m.rotation().transpose()*angular_impl());
+      typedef ForceTpl<ForceScalar,ForceOptions> ReturnType;
+      return ReturnType(angular().cross(f.linear()),
+                        angular().cross(f.angular())+linear().cross(f.linear()) );
     }
+
 
     void disp_impl(std::ostream & os) const
     {
-      os << "  v = " << linear_impl().transpose () << std::endl
-      << "  w = " << angular_impl().transpose () << std::endl;
+      using namespace std;
+      os
+      << "  v = " << linear().transpose () << endl
+      << "  w = " << angular().transpose () << endl;
     }
+    
+    Vector6 & coeffs() { return data; }
+    const Vector6 & coeffs() const { return data; }
+    operator Vector6 () const { return coeffs(); }
 
 //    /** \brief Compute the classical acceleration of point according to the spatial velocity and spatial acceleration of the frame centered on this point
 //     */
@@ -254,9 +435,13 @@ namespace se3
   struct BiasZero;
 
   template<>
-  struct traits< BiasZero >
+  struct traits< BiasZero > : traits < MotionBase<BiasZero> >
   {
     typedef double Scalar_t;
+    typedef BiasZero Type;
+    typedef traits< MotionBase<Type> > BaseTraits;
+    using typename BaseTraits::SE3ActionReturnType;
+    typedef Scalar_t DotReturnType;
     typedef Eigen::Matrix<double,3,1,0> Vector3;
     typedef Eigen::Matrix<double,4,1,0> Vector4;
     typedef Eigen::Matrix<double,6,1,0> Vector6;
@@ -279,14 +464,50 @@ namespace se3
     };
   }; // traits BiasZero
 
-  struct BiasZero : public MotionBase< BiasZero >
+  struct BiasZero : public MotionBase<BiasZero>
   {
     SPATIAL_TYPEDEF_NO_TEMPLATE(BiasZero);
-    operator Motion () const { return Motion::Zero(); }
+    
+    template <typename OtherDerived>
+    operator typename MotionBase<OtherDerived>::Derived () const
+    {
+      return OtherDerived::Zero();
+    }
+    
+    template <typename Scalar, int Options>
+    operator MotionTpl<Scalar,Options> () const
+    {
+      return MotionTpl<Scalar,Options>::Zero();
+    }
+    
+    template<typename Derived>
+    const MotionBase<Derived> & add (const MotionBase<Derived> & other) const
+    {
+      return other;
+    }
+    
+    template<typename OtherDerived>
+    void addTo (MotionBase<OtherDerived> &) const
+    {
+    }
+    
+    template<typename OtherDerived>
+    void subTo (MotionBase<OtherDerived> &) const
+    {
+    }
   }; // struct BiasZero
 
-inline const Motion & operator+( const Motion& v, const BiasZero&) { return v; }
-inline const Motion & operator+ ( const BiasZero&,const Motion& v) { return v; }
+  template <typename Derived>
+  inline const Derived & operator+ (const MotionBase<Derived> & v, const BiasZero &) { return v.derived(); }
+  
+  template <typename Derived>
+  inline const Derived & operator- (const MotionBase<Derived> & v, const BiasZero &) { return v.derived(); }
+  
+  template <typename Derived>
+  inline const Derived & operator+ (const BiasZero &, const MotionBase<Derived> & v) { return v.derived(); }
+  
+  template <typename Derived>
+  inline const Derived & operator- (const BiasZero &, const MotionBase<Derived> & v) { return v.derived().opposite(); }
 
 } // namespace se3
 

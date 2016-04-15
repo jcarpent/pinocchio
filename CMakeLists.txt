@@ -30,7 +30,7 @@ SET(PROJECT_URL "http://github.com/stac-of-tasks/pinocchio")
 SET(DOXYGEN_USE_MATHJAX YES)
 
 IF(APPLE)
-  SET(CMAKE_MACOSX_RPATH 1)
+  SET(CMAKE_MACOSX_RPATH False)
 ENDIF(APPLE)
 
 # Disable -Werror on Unix for now.
@@ -93,6 +93,7 @@ SET(${PROJECT_NAME}_TOOLS_HEADERS
   )
 
 SET(${PROJECT_NAME}_SPATIAL_HEADERS
+  spatial/spatial.hpp
   spatial/symmetric3.hpp
   spatial/se3.hpp
   spatial/motion.hpp

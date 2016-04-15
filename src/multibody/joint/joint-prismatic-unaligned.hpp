@@ -34,9 +34,13 @@ namespace se3
   struct MotionPrismaticUnaligned;
   
   template <>
-  struct traits <MotionPrismaticUnaligned>
+  struct traits <MotionPrismaticUnaligned> : traits< MotionBase<MotionPrismaticUnaligned> >
   {
     typedef double Scalar_t;
+    typedef MotionPrismaticUnaligned Type;
+    typedef traits< MotionBase<Type> > BaseTraits;
+    using typename BaseTraits::SE3ActionReturnType;
+    typedef Scalar_t DotReturnType;
     typedef Eigen::Matrix<Scalar_t,3,1,0> Vector3;
     typedef Eigen::Matrix<Scalar_t,4,1,0> Vector4;
     typedef Eigen::Matrix<Scalar_t,6,1,0> Vector6;
@@ -70,6 +74,12 @@ namespace se3
     Scalar_t v;
 
     operator Motion() const { return Motion(axis*v, Vector3::Zero());}
+    
+    template<typename OtherScalar, int OtherOptions>
+    void addTo (MotionTpl<OtherScalar, OtherOptions> & dest) const
+    {
+      dest.linear() += axis*v;
+    }
   }; // struct MotionPrismaticUnaligned
 
   inline const MotionPrismaticUnaligned & operator+ (const MotionPrismaticUnaligned & m, const BiasZero &)
@@ -85,6 +95,7 @@ namespace se3
   struct traits <ConstraintPrismaticUnaligned>
   {
     typedef double Scalar_t;
+    typedef Eigen::Matrix<Scalar_t,6,1,0> SE3ActionReturnType;
     typedef Eigen::Matrix<Scalar_t,3,1,0> Vector3;
     typedef Eigen::Matrix<Scalar_t,4,1,0> Vector4;
     typedef Eigen::Matrix<Scalar_t,6,1,0> Vector6;
@@ -117,6 +128,7 @@ namespace se3
       typedef traits<ConstraintPrismaticUnaligned>::JointMotion JointMotion;
       typedef traits<ConstraintPrismaticUnaligned>::JointForce JointForce;
       typedef traits<ConstraintPrismaticUnaligned>::DenseBase DenseBase;
+      typedef traits<ConstraintPrismaticUnaligned>::SE3ActionReturnType SE3ActionReturnType;
       
       ConstraintPrismaticUnaligned () : axis (Vector3::Constant(NAN)) {}
       ConstraintPrismaticUnaligned (const Vector3 & axis) : axis(axis) {}
@@ -129,11 +141,12 @@ namespace se3
       	EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(D,1);
       	return MotionPrismaticUnaligned(axis,v[0]); 
       }
-
-      Vector6 se3Action (const SE3 & m) const
+      
+      template<typename SE3Scalar, int SE3Options>
+      SE3ActionReturnType SE3ActOn(const SE3Tpl<SE3Scalar,SE3Options> & M) const
       {
-        Vector6 res;
-        res.head<3> () = m.rotation()*axis;
+        SE3ActionReturnType res;
+        res.head<3> () = M.rotation()*axis;
         res.tail<3>().setZero();
         return res;
       }
@@ -156,15 +169,15 @@ namespace se3
       	}
 
         /* [CRBA]  MatrixBase operator* (Constraint::Transpose S, ForceSet::Block) */
-        template<typename D>
+        template<typename EigenDerived>
         friend
         const typename Eigen::ProductReturnType<
         Eigen::Transpose<const Vector3>,
-        typename Eigen::MatrixBase<const D>::template NRowsBlockXpr<3>::Type
+        typename Eigen::MatrixBase<const EigenDerived>::template NRowsBlockXpr<3>::Type
         >::Type
-        operator* (const TransposeConst & tc, const Eigen::MatrixBase<D> & F)
+        operator* (const TransposeConst & tc, const Eigen::MatrixBase<EigenDerived> & F)
         {
-          EIGEN_STATIC_ASSERT(D::RowsAtCompileTime==6,THIS_METHOD_IS_ONLY_FOR_MATRICES_OF_A_SPECIFIC_SIZE)
+          EIGEN_STATIC_ASSERT(EigenDerived::RowsAtCompileTime==6,THIS_METHOD_IS_ONLY_FOR_MATRICES_OF_A_SPECIFIC_SIZE)
           /* Return ax.T * F[1:3,:] */
           return tc.ref.axis.transpose () * F.template topRows<3> ();
         }
@@ -223,12 +236,12 @@ namespace se3
   }
 
   
-    namespace internal 
-    {
-      template<>
-      struct ActionReturn<ConstraintPrismaticUnaligned >  
-      { typedef Eigen::Matrix<double,6,1> Type; };
-    }
+//    namespace internal 
+//    {
+//      template<>
+//      struct ActionReturn<ConstraintPrismaticUnaligned >  
+//      { typedef Eigen::Matrix<double,6,1> Type; };
+//    }
 
     struct JointPrismaticUnaligned;
     template<>
@@ -348,12 +361,12 @@ namespace se3
     
     void calc_aba(JointData & data, Inertia::Matrix6 & I, const bool update_I) const
     {
-      data.U = I.block<6,3> (0,Inertia::LINEAR) * axis;
+      data.U.noalias() = I.block<6,3> (0,Inertia::LINEAR) * data.v.axis;
       data.Dinv[0] = 1./axis.dot(data.U.segment <3> (Inertia::LINEAR));
-      data.UDinv = data.U * data.Dinv;
+      data.UDinv.noalias() = data.U * data.Dinv;
       
       if (update_I)
-        I -= data.UDinv * data.U.transpose();
+        I.noalias() -= data.UDinv * data.U.transpose();
     }
 
 

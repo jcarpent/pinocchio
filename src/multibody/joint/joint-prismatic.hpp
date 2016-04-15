@@ -55,10 +55,14 @@ namespace se3
   } // namespace prismatic
 
   template <int axis> struct MotionPrismatic;
-  template<int axis>
-  struct traits <MotionPrismatic < axis > >
+  template <int axis>
+  struct traits< MotionPrismatic<axis> > : traits< MotionBase< MotionPrismatic<axis> > >
   {
     typedef double Scalar_t;
+    typedef MotionPrismatic <axis> Type;
+    typedef traits< MotionBase<Type> > BaseTraits;
+    using typename BaseTraits::SE3ActionReturnType;
+    typedef Scalar_t DotReturnType;
     typedef Eigen::Matrix<double,3,1,0> Vector3;
     typedef Eigen::Matrix<double,4,1,0> Vector4;
     typedef Eigen::Matrix<double,6,1,0> Vector6;
@@ -96,6 +100,12 @@ namespace se3
                       Motion::Vector3::Zero()
                     );
     }
+    
+    template<typename OtherScalar, int OtherOptions>
+    void addTo (MotionTpl<OtherScalar, OtherOptions> & dest) const
+    {
+      dest.linear()[axis] += v;
+    }
   }; // struct MotionPrismatic
 
   template <int axis>
@@ -113,6 +123,7 @@ namespace se3
   struct traits< ConstraintPrismatic<axis> >
   {
     typedef double Scalar_t;
+    typedef Eigen::Matrix<double,6,1,0> SE3ActionReturnType;
     typedef Eigen::Matrix<double,3,1,0> Vector3;
     typedef Eigen::Matrix<double,4,1,0> Vector4;
     typedef Eigen::Matrix<double,6,1,0> Vector6;
@@ -146,6 +157,7 @@ namespace se3
     typedef typename traits<ConstraintPrismatic>::JointMotion JointMotion;
     typedef typename traits<ConstraintPrismatic>::JointForce JointForce;
     typedef typename traits<ConstraintPrismatic>::DenseBase DenseBase;
+    typedef typename traits<ConstraintPrismatic>::SE3ActionReturnType SE3ActionReturnType;
 
     template<typename D>
     MotionPrismatic<axis> operator*( const Eigen::MatrixBase<D> & v ) const
@@ -154,12 +166,13 @@ namespace se3
       return MotionPrismatic<axis>(v[0]);
     }
 
-    Eigen::Matrix<double,6,1> se3Action(const SE3 & m) const
+    template<typename SE3Scalar, int SE3Options>
+    SE3ActionReturnType SE3ActOn(const SE3Tpl<SE3Scalar,SE3Options> & M) const
     { 
-     Eigen::Matrix<double,6,1> res;
-     res.head<3>() = m.rotation().col(axis);
-     res.tail<3>() = Motion::Vector3::Zero();
-     return res;
+      SE3ActionReturnType res;
+      res.template head<3>() = M.rotation().col(axis);
+      res.template tail<3>().setZero();
+      return res;
     }
 
     int nv_impl() const { return NV; }
@@ -174,11 +187,11 @@ namespace se3
       { return f.linear().template segment<1>(axis); }
 
       /* [CRBA]  MatrixBase operator* (Constraint::Transpose S, ForceSet::Block) */
-      template<typename D>
-      friend typename Eigen::MatrixBase<D>::ConstRowXpr
-      operator*( const TransposeConst &, const Eigen::MatrixBase<D> & F )
+      template<typename EigenDerived>
+      friend typename Eigen::MatrixBase<EigenDerived>::ConstRowXpr
+      operator*( const TransposeConst &, const Eigen::MatrixBase<EigenDerived> & F)
       {
-        assert(F.rows()==6);
+        EIGEN_STATIC_ASSERT(EigenDerived::RowsAtCompileTime==6,THIS_METHOD_IS_ONLY_FOR_MATRICES_OF_A_SPECIFIC_SIZE)
         return F.row(axis);
       }
 
@@ -319,12 +332,12 @@ namespace se3
     return Y.col(Inertia::LINEAR + axis);
   }
 
-  namespace internal 
-  {
-    template<int axis>
-    struct ActionReturn<ConstraintPrismatic<axis> >
-    { typedef Eigen::Matrix<double,6,1> Type; };
-  }
+//  namespace internal 
+//  {
+//    template<int axis>
+//    struct ActionReturn<ConstraintPrismatic<axis> >
+//    { typedef Eigen::Matrix<double,6,1> Type; };
+//  }
 
 
 
@@ -419,10 +432,10 @@ namespace se3
     {
       data.U = I.col(Inertia::LINEAR + axis);
       data.Dinv[0] = 1./I(Inertia::LINEAR + axis, Inertia::LINEAR + axis);
-      data.UDinv = data.U * data.Dinv[0];
+      data.UDinv.noalias() = data.U * data.Dinv[0];
       
       if (update_I)
-        I -= data.UDinv * data.U.transpose();
+        I.noalias() -= data.UDinv * data.U.transpose();
     }
 
     ConfigVector_t integrate_impl(const Eigen::VectorXd & qs,const Eigen::VectorXd & vs) const

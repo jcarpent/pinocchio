@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE ( test_jacobian )
   VectorXd qddot = VectorXd::Zero(model.nv);
   rnea( model,data,q,qdot,qddot );
   Motion v = data.oMi[idx].act( data.v[idx] );
-  BOOST_CHECK(v.toVector().isApprox(Jrh*qdot,1e-12));
+  BOOST_CHECK(v.coeffs().isApprox(Jrh*qdot,1e-12));
 
 
   /* Test local jacobian: rhJrh == rhXo oJrh */ 

@@ -48,17 +48,20 @@ namespace se3
       const Model::Index & parent = model.parents[i];
       data.liMi[i] = model.jointPlacements[i] * jdata.M();
       
-      data.v[i] = jdata.v();
-      
       if (parent>0)
       {
         data.oMi[i] = data.oMi[parent] * data.liMi[i];
-        data.v[i] += data.liMi[i].actInv(data.v[parent]);
+        data.v[i] = data.liMi[i].actInv(data.v[parent]);
+        data.v[i] += jdata.v();
       }
       else
+      {
         data.oMi[i] = data.liMi[i];
+        data.v[i] = jdata.v();
+      }
       
-      data.a[i] = jdata.c() + (data.v[i] ^ jdata.v());
+      data.a[i] = data.v[i] ^ jdata.v();
+      data.a[i] += jdata.c();
       
       data.Yaba[i] = model.inertias[i].matrix();
       data.f[i] = model.inertias[i].vxiv(data.v[i]); // -f_ext
@@ -85,12 +88,12 @@ namespace se3
       
       jmodel.jointVelocitySelector(data.u) -= jdata.S().transpose()*data.f[i];
       jmodel.calc_aba(jdata.derived(), Ia, parent > 0);
-      jmodel.jointVelocitySelector(data.ddq) = jdata.Dinv() * jmodel.jointVelocitySelector(data.u);
+      jmodel.jointVelocitySelector(data.ddq).noalias() = jdata.Dinv() * jmodel.jointVelocitySelector(data.u);
       
       if (parent > 0)
       {
         Force & pa = data.f[i];
-        pa.toVector() += Ia * data.a[i].toVector() + jdata.UDinv() * jmodel.jointVelocitySelector(data.u);
+        pa.coeffs().noalias() += Ia * data.a[i].coeffs() + jdata.UDinv() * jmodel.jointVelocitySelector(data.u);
         data.Yaba[parent] += SE3actOn(data.liMi[i], Ia);
         data.f[parent] += data.liMi[i].act(pa);
       }
@@ -141,8 +144,13 @@ namespace se3
       Block3 Co = res.block<3,3> (Inertia::ANGULAR, Inertia::LINEAR);
       Block3 Do = res.block<3,3> (Inertia::ANGULAR, Inertia::ANGULAR);
       
-      Ao = R*Ai*R.transpose();
-      Bo = R*Bi*R.transpose();
+      typedef Eigen::Matrix<double,3,6,0> Matrix36;
+      Matrix36 tmp;
+      
+      tmp.leftCols <3> ().noalias() = Ai*R.transpose();
+      tmp.rightCols <3> ().noalias() = Bi*R.transpose();
+      res.topRows <3> ().noalias() = R * tmp;
+      
       Do.row(0) = t.cross(Bo.col(0));
       Do.row(1) = t.cross(Bo.col(1));
       Do.row(2) = t.cross(Bo.col(2));
@@ -156,7 +164,8 @@ namespace se3
       Do.col(0) += t.cross(Bo.col(0));
       Do.col(1) += t.cross(Bo.col(1));
       Do.col(2) += t.cross(Bo.col(2));
-      Do += R*Di*R.transpose();
+      tmp.leftCols <3> ().noalias() = Di*R.transpose();
+      Do.noalias() += R*tmp.leftCols <3> ();
       return res;
     }
   };
@@ -179,7 +188,7 @@ namespace se3
       const Model::Index & parent = model.parents[i];
       
       data.a[i] += data.liMi[i].actInv(data.a[parent]);
-      jmodel.jointVelocitySelector(data.ddq) -= jdata.UDinv().transpose() * data.a[i].toVector();
+      jmodel.jointVelocitySelector(data.ddq).noalias() -= jdata.UDinv().transpose() * data.a[i].coeffs();
       
       data.a[i] += jdata.S() * jmodel.jointVelocitySelector(data.ddq);
     }

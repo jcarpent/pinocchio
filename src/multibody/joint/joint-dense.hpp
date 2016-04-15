@@ -35,7 +35,7 @@ namespace se3
     typedef ConstraintXd Constraint_t;
     typedef SE3 Transformation_t;
     typedef Motion Motion_t;
-    typedef BiasZero Bias_t;
+    typedef Motion Bias_t;
     typedef Eigen::Matrix<double,6,NV> F_t;
     
     // [ABA]
@@ -69,6 +69,9 @@ namespace se3
     U_t U;
     D_t Dinv;
     UD_t UDinv;
+    
+    // Instantiate jmodel
+    SE3_JOINT_DATA_MODEL;
 
     /// Removed Default constructor of JointDataDense because it was calling default constructor of
     /// ConstraintXd -> eigen_static_assert
@@ -78,7 +81,7 @@ namespace se3
     //   M.translation(SE3::Vector3::Zero());
     // }
 
-    JointDataDense() {};
+    JointDataDense(const JointModel & jmodel) : jmodel(jmodel) {};
 
     JointDataDense(const Constraint_t & S,
                    const Transformation_t & M,
@@ -126,7 +129,7 @@ namespace se3
     JointData createData() const
     {
       //assert(false && "JointModelDense is read-only, should not createData");
-      return JointData();
+      return JointData(*this);
     }
     void calc(JointData &,
               const Eigen::VectorXd &) const

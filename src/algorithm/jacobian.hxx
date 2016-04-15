@@ -85,7 +85,7 @@ namespace se3
     for(int j=colRef;j>=0;j=data.parents_fromRow[(Model::Index)j])
     {
       if(! localFrame )   J.col(j) = data.J.col(j);
-      else                J.col(j) = oMjoint.actInv(Motion(data.J.col(j))).toVector();
+      else                J.col(j) = oMjoint.actInv(Motion(data.J.col(j))).coeffs();
     }
   }
   

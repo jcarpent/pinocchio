@@ -98,7 +98,7 @@ namespace se3
         model.getJointId( link->getParent()->parent_joint->name );
 
         // Transformation from the parent link to the joint origin
-        const SE3 & jointPlacement = placementOffset*convertFromUrdf(joint->parent_to_joint_origin_transform);
+        const SE3 & jointPlacement = (placementOffset*convertFromUrdf(joint->parent_to_joint_origin_transform)).eval();
 
         const Inertia & Y = (link->inertial) ? convertFromUrdf(*link->inertial) :
         Inertia::Zero();

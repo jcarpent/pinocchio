@@ -48,22 +48,50 @@ namespace se3
     struct JointVisitor : public boost::static_visitor<>
     {
       template<typename D>
-      void operator() (const JointModelBase<D> & jmodel) const
+      inline void operator() (const JointModelBase<D> & jmodel) const
       {
-	JointDataVariant& jdataSpec = static_cast<const Visitor*>(this)->jdata;
-
-	bf::invoke(&Visitor::template algo<D>,
-		   bf::append2(jmodel,
-			       boost::ref(boost::get<typename D::JointData>(jdataSpec)),
-			       static_cast<const Visitor*>(this)->args));
+        JointDataVariant& jdataSpec = static_cast<const Visitor*>(this)->jdata;
+        
+        bf::invoke(&Visitor::template algo<D>,
+                   bf::append2(jmodel,
+                               boost::ref(boost::get<typename D::JointData>(jdataSpec)),
+                               static_cast<const Visitor*>(this)->args));
       }
 
       template<typename ArgsTmp>
-      static void run(const JointModelVariant & jmodel,
-		      JointDataVariant & jdata,
-		      ArgsTmp args)
+      inline static void run(const JointModelVariant & jmodel,
+                             JointDataVariant & jdata,
+                             ArgsTmp args)
       {
-	return boost::apply_visitor( Visitor(jdata,args),jmodel );
+        return boost::apply_visitor( Visitor(jdata,args),jmodel );
+      }
+      
+      void self_run(const JointModelVariant & jmodel)
+      {
+        return boost::apply_visitor(*this,jmodel);
+      }
+    };
+    
+    template<typename Visitor>
+    struct JointSparseVisitor : public boost::static_visitor<>
+    {
+      template<typename D>
+      void operator() (const JointModelBase<D> & jmodel) const
+      {
+        JointDataVariant& jdataSpec = static_cast<const Visitor*>(this)->jdata;
+        
+        bf::invoke(&Visitor::template algo<D>,
+                   bf::append2(jmodel,
+                               boost::ref(boost::get<typename D::JointData>(jdataSpec)),
+                               static_cast<const Visitor*>(this)->args));
+      }
+      
+      template<typename ArgsTmp>
+      static void run(const JointModelVariant & jmodel,
+                      JointDataVariant & jdata,
+                      ArgsTmp args)
+      {
+        return boost::apply_visitor( Visitor(jdata,args),jmodel );
       }
     };
 
@@ -75,16 +103,36 @@ namespace se3
       void operator() (const JointModelBase<D> & jmodel) const
       {
 
-  bf::invoke(&Visitor::template algo<D>,
-       bf::append(jmodel,
-             static_cast<const Visitor*>(this)->args));
+        bf::invoke(&Visitor::template algo<D>,
+                   bf::append(jmodel,
+                              static_cast<const Visitor*>(this)->args));
       }
 
       template<typename ArgsTmp>
       static void run(const JointModelVariant & jmodel,
-          ArgsTmp args)
+                      ArgsTmp args)
       {
-  return boost::apply_visitor( Visitor(args),jmodel );
+        return boost::apply_visitor(Visitor(args),jmodel);
+      }
+    };
+    
+    template<typename Visitor>
+    struct JointDataVisitor : public boost::static_visitor<>
+    {
+      template<typename D>
+      void operator() (const JointDataBase<D> & jdata) const
+      {
+        
+        bf::invoke(&Visitor::template algo<D>,
+                   bf::append(jdata,
+                              static_cast<const Visitor*>(this)->args));
+      }
+      
+      template<typename ArgsTmp>
+      static void run(JointDataVariant & jdata,
+                      ArgsTmp args)
+      {
+        return boost::apply_visitor(Visitor(args),jdata);
       }
     };
   
@@ -97,10 +145,14 @@ namespace se3
   JointDataVariant & jdata;						\
   ArgsType args
 
-
 #define JOINT_MODEL_VISITOR_INIT(VISITOR)         \
   VISITOR(ArgsType args ) : args(args) {} \
   using se3::fusion::JointModelVisitor< VISITOR >::run;      \
+  ArgsType args
+
+#define JOINT_DATA_VISITOR_INIT(VISITOR)         \
+  VISITOR(ArgsType args ) : args(args) {} \
+  using se3::fusion::JointDataVisitor< VISITOR >::run;      \
   ArgsType args
 
 #endif // ifndef __se3_visitor_hpp__

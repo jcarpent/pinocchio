@@ -34,6 +34,9 @@ namespace se3
   struct JointDataSphericalZYX;
   struct JointModelSphericalZYX;
   
+  template <typename _Scalar, int _Options=0> struct JointSphericalZYXTpl;
+
+  
   template <typename _Scalar, int _Options>
   struct JointSphericalZYXTpl
   {
@@ -47,27 +50,42 @@ namespace se3
     typedef ForceTpl<Scalar,Options> Force;
     typedef SE3Tpl<Scalar,Options> SE3;
 
-    struct BiasSpherical
-    {
-      typename MotionTpl<Scalar,Options>::Vector3 c_J;
+//    struct BiasSpherical
+//    {
+//      typename MotionTpl<Scalar,Options>::Vector3 c_J;
+//
+//      BiasSpherical ()  {c_J.fill (NAN);}
+//      //BiasSpherical (const Motion::Vector3 & c_J) c_J (c_J) {}
+//
+//      template<typename OtherScalar, int OtherOptions>
+//      operator MotionTpl<OtherScalar,OtherOptions> () const
+//      {
+//        typedef MotionTpl<OtherScalar,OtherOptions> ReturnType;
+//        return  ReturnType(ReturnType::Linear_t::Zero (), c_J);
+//      }
+//
+//      typename MotionTpl<Scalar,Options>::Vector3 & operator() () { return c_J; }
+//      const typename MotionTpl<Scalar,Options>::Vector3 & operator() () const { return c_J; }
+//      
+//      template<typename OtherScalar, int OtherOptions>
+//      MotionTpl<OtherScalar, OtherOptions> add (const MotionTpl<OtherScalar, OtherOptions> & other) const
+//      {
+//        
+//        return MotionTpl(data + other.coeffs());
+//      }
+//
+//
+//    }; // struct BiasSpherical
 
-      BiasSpherical ()  {c_J.fill (NAN);}
-      //BiasSpherical (const Motion::Vector3 & c_J) c_J (c_J) {}
+//    template<typename OtherScalar, int OtherOptions>
+//    inline friend const Motion operator+ (const MotionTpl<OtherScalar, OtherOptions> & v, const BiasSpherical & c)
+//    {
+//      typedef
+//      return Motion (v.linear (), v.angular () + c ());
+//    }
+//    inline friend const Motion operator+ (const BiasSpherical & c, const MotionTpl<OtherScalar, OtherOptions> & v) { return Motion (v.linear (), v.angular () + c ()); }
 
-      operator Motion () const { return Motion (Motion::Vector3::Zero (), c_J); }
-
-      operator BiasZero() const { return BiasZero();}
-
-      typename MotionTpl<Scalar,Options>::Vector3 & operator() () { return c_J; }
-      const typename MotionTpl<Scalar,Options>::Vector3 & operator() () const { return c_J; }
-
-
-    }; // struct BiasSpherical
-
-    inline friend const Motion operator+ (const Motion & v, const BiasSpherical & c) { return Motion (v.linear (), v.angular () + c ()); }
-    inline friend const Motion operator+ (const BiasSpherical & c, const Motion & v) { return Motion (v.linear (), v.angular () + c ()); }
-
-    struct MotionSpherical
+    struct MotionSpherical : MotionBase<MotionSpherical>
     {
       MotionSpherical ()                       {w.fill(NAN);}
       MotionSpherical (const typename MotionTpl<Scalar,Options>::Vector3 & w) : w (w)  {}
@@ -76,117 +94,283 @@ namespace se3
       typename MotionTpl<Scalar,Options>::Vector3 & operator() () { return w; }
       const typename MotionTpl<Scalar,Options>::Vector3 & operator() () const { return w; }
 
-      operator Motion() const
+      template<typename OtherScalar, int OtherOptions>
+      inline operator MotionTpl<OtherScalar, OtherOptions> () const
       {
+        typedef MotionTpl<OtherScalar, OtherOptions> ReturnType;
+        typedef typename ReturnType::Vector3 Vector3;
         //return Motion (typename MotionTpl<_Scalar,_Options>::Vector3::Zero (), w);
-        return Motion ( Motion::Vector3::Zero (), w);
+        return ReturnType(Vector3::Zero(),w);
+      }
+      
+      template<typename OtherScalar, int OtherOptions>
+      MotionTpl<OtherScalar, OtherOptions> add (const MotionTpl<OtherScalar, OtherOptions> & other) const
+      {
+        typedef MotionTpl<OtherScalar, OtherOptions> ReturnType;
+        ReturnType res (other);
+        res.angular() += w;
+        return res;
+      }
+      
+      template<typename OtherScalar, int OtherOptions>
+      MotionTpl<OtherScalar, OtherOptions> sub (const MotionTpl<OtherScalar, OtherOptions> & other) const
+      {
+        typedef MotionTpl<OtherScalar, OtherOptions> ReturnType;
+        ReturnType res (other);
+        res.angular() -= w;
+        return w;
+      }
+      
+      template<typename OtherScalar, int OtherOptions>
+      inline void addTo (MotionTpl<OtherScalar, OtherOptions> & dest) const
+      {
+        dest.angular() += w;
+      }
+      
+      template<typename OtherScalar, int OtherOptions>
+      inline void subTo (MotionTpl<OtherScalar, OtherOptions> & dest) const
+      {
+        dest.angular() -= w;
       }
     }; // struct MotionSpherical
 
-    inline friend const MotionSpherical operator+ (const MotionSpherical & m, const BiasSpherical & c)
-    { return MotionSpherical (m.w + c.c_J); }
+//    inline friend const MotionSpherical operator+ (const MotionSpherical & m, const BiasSpherical & c)
+//    { return MotionSpherical (m.w + c.c_J); }
 
-    friend MotionTpl<_Scalar,_Options> operator+ (const MotionSpherical & m1, 
-                                                  const MotionTpl<_Scalar,_Options> & m2)
+    template<typename MotionScalar,int MotionOptions>
+    friend MotionTpl<MotionScalar,MotionOptions>
+    operator+ (const MotionSpherical & m1, const MotionTpl<MotionScalar,MotionOptions> & m2)
     {
-      return MotionTpl<_Scalar,_Options>( m2.linear(),m2.angular() + m1.w);
+      typedef MotionTpl<MotionScalar,MotionOptions> ReturnType;
+      return ReturnType (m2.linear(),m2.angular()+m1.w);
+    }
+    
+    struct ConstraintZYXRotationalSubspace;
+    
+
+    template<typename EigenDerived>
+    friend MotionTpl<Scalar,Options>
+    operator* (const ConstraintZYXRotationalSubspace & S, const Eigen::MatrixBase<EigenDerived> & v)
+    {
+      EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(EigenDerived,3);
+      typedef MotionTpl<Scalar,Options> ReturnType;
+      typedef typename ReturnType::Vector3 Vector3;
+      return ReturnType(Vector3::Zero(),S()*v);
     }
 
-    struct ConstraintRotationalSubspace
+  }; // struct JointSphericalZYXTpl
+
+  template <>
+  struct traits< typename JointSphericalZYXTpl<double,0>::MotionSpherical >   {
+    typedef double Scalar_t;
+    typedef MotionTpl<double,0> SE3ActionReturnType;
+    typedef Scalar_t DotReturnType;
+    typedef Eigen::Matrix<double,3,1,0> Vector3;
+    typedef Eigen::Matrix<double,4,1,0> Vector4;
+    typedef Eigen::Matrix<double,6,1,0> Vector6;
+    typedef Eigen::Matrix<double,3,3,0> Matrix3;
+    typedef Eigen::Matrix<double,4,4,0> Matrix4;
+    typedef Eigen::Matrix<double,6,6,0> Matrix6;
+    typedef Matrix3 Angular_t;
+    typedef Vector3 Linear_t;
+    typedef const Matrix3 ConstAngular_t;
+    typedef const Vector3 ConstLinear_t;
+    typedef Matrix6 ActionMatrix_t;
+    typedef Eigen::Quaternion<double,0> Quaternion_t;
+    typedef SE3Tpl<double,0> SE3;
+    typedef ForceTpl<double,0> Force;
+    typedef MotionTpl<double,0> Motion;
+    typedef Symmetric3Tpl<double,0> Symmetric3;
+    enum {
+      LINEAR = 0,
+      ANGULAR = 3
+    };
+    typedef Eigen::Matrix<Scalar_t,3,1,0> JointMotion;
+    typedef Eigen::Matrix<Scalar_t,3,1,0> JointForce;
+    typedef Eigen::Matrix<Scalar_t,6,3> DenseBase;
+  };
+  
+  template <>
+  struct traits< typename JointSphericalZYXTpl<double,2>::MotionSpherical >   {
+    typedef double Scalar_t;
+    typedef MotionTpl<double,2> SE3ActionReturnType;
+    typedef Scalar_t DotReturnType;
+    typedef Eigen::Matrix<double,3,1,0> Vector3;
+    typedef Eigen::Matrix<double,4,1,0> Vector4;
+    typedef Eigen::Matrix<double,6,1,0> Vector6;
+    typedef Eigen::Matrix<double,3,3,0> Matrix3;
+    typedef Eigen::Matrix<double,4,4,0> Matrix4;
+    typedef Eigen::Matrix<double,6,6,0> Matrix6;
+    typedef Matrix3 Angular_t;
+    typedef Vector3 Linear_t;
+    typedef const Matrix3 ConstAngular_t;
+    typedef const Vector3 ConstLinear_t;
+    typedef Matrix6 ActionMatrix_t;
+    typedef Eigen::Quaternion<double,0> Quaternion_t;
+    typedef SE3Tpl<double,0> SE3;
+    typedef ForceTpl<double,0> Force;
+    typedef MotionTpl<double,0> Motion;
+    typedef Symmetric3Tpl<double,0> Symmetric3;
+    enum {
+      LINEAR = 0,
+      ANGULAR = 3
+    };
+    typedef Eigen::Matrix<Scalar_t,3,1,0> JointMotion;
+    typedef Eigen::Matrix<Scalar_t,3,1,0> JointForce;
+    typedef Eigen::Matrix<Scalar_t,6,3> DenseBase;
+  };
+  
+  template <>
+  struct traits< JointSphericalZYXTpl<double,0>::ConstraintZYXRotationalSubspace > : traits < ConstraintBase< JointSphericalZYXTpl<double,0>::ConstraintZYXRotationalSubspace > >
+  {
+    typedef Eigen::Matrix <double,6,3,0> SE3ActionReturnType;
+    
+    typedef double Scalar_t;
+    typedef Eigen::Matrix<double,3,1,0> Vector3;
+    typedef Eigen::Matrix<double,4,1,0> Vector4;
+    typedef Eigen::Matrix<double,6,1,0> Vector6;
+    typedef Eigen::Matrix<double,3,3,0> Matrix3;
+    typedef Eigen::Matrix<double,4,4,0> Matrix4;
+    typedef Eigen::Matrix<double,6,6,0> Matrix6;
+    typedef Matrix3 Angular_t;
+    typedef Vector3 Linear_t;
+    typedef const Matrix3 ConstAngular_t;
+    typedef const Vector3 ConstLinear_t;
+    typedef Matrix6 ActionMatrix_t;
+    typedef Eigen::Quaternion<double,0> Quaternion_t;
+    typedef SE3Tpl<double,0> SE3;
+    typedef ForceTpl<double,0> Force;
+    typedef MotionTpl<double,0> Motion;
+    typedef Symmetric3Tpl<double,0> Symmetric3;
+    enum {
+      LINEAR = 0,
+      ANGULAR = 3
+    };
+    typedef Eigen::Matrix<Scalar_t,3,1,0> JointMotion;
+    typedef Eigen::Matrix<Scalar_t,3,1,0> JointForce;
+    typedef Eigen::Matrix<Scalar_t,6,3> DenseBase;
+  };
+  
+  template <>
+  struct traits< JointSphericalZYXTpl<double,2>::ConstraintZYXRotationalSubspace > : traits < ConstraintBase< JointSphericalZYXTpl<double,0>::ConstraintZYXRotationalSubspace > >
+  {
+    typedef Eigen::Matrix <double,6,3,0> SE3ActionReturnType;
+    
+    typedef double Scalar_t;
+    typedef Eigen::Matrix<double,3,1,0> Vector3;
+    typedef Eigen::Matrix<double,4,1,0> Vector4;
+    typedef Eigen::Matrix<double,6,1,0> Vector6;
+    typedef Eigen::Matrix<double,3,3,0> Matrix3;
+    typedef Eigen::Matrix<double,4,4,0> Matrix4;
+    typedef Eigen::Matrix<double,6,6,0> Matrix6;
+    typedef Matrix3 Angular_t;
+    typedef Vector3 Linear_t;
+    typedef const Matrix3 ConstAngular_t;
+    typedef const Vector3 ConstLinear_t;
+    typedef Matrix6 ActionMatrix_t;
+    typedef Eigen::Quaternion<double,0> Quaternion_t;
+    typedef SE3Tpl<double,0> SE3;
+    typedef ForceTpl<double,0> Force;
+    typedef MotionTpl<double,0> Motion;
+    typedef Symmetric3Tpl<double,0> Symmetric3;
+    enum {
+      LINEAR = 0,
+      ANGULAR = 3
+    };
+    typedef Eigen::Matrix<Scalar_t,3,1,0> JointMotion;
+    typedef Eigen::Matrix<Scalar_t,3,1,0> JointForce;
+    typedef Eigen::Matrix<Scalar_t,6,3> DenseBase;
+  };
+
+  
+  template<typename _Scalar, int _Options>
+  struct JointSphericalZYXTpl<_Scalar,_Options>::ConstraintZYXRotationalSubspace : ConstraintBase <ConstraintZYXRotationalSubspace>
+  {
+    enum { NV = 3, Options = 0 };
+    typedef _Scalar Scalar;
+    typedef Eigen::Matrix <_Scalar,3,3,_Options> Matrix3;
+    typedef Eigen::Matrix <_Scalar,3,1,_Options> Vector3;
+    typedef Eigen::Matrix <_Scalar,6,3,_Options> ConstraintDense;
+    typedef Eigen::Matrix <_Scalar,6,3,_Options> SE3ActionReturnType;
+    
+    Matrix3 S_minimal;
+    
+    Motion operator* (const MotionSpherical & vj) const
+    { return Motion (Motion::Vector3::Zero (), S_minimal * vj ()); }
+    
+    ConstraintZYXRotationalSubspace () : S_minimal () { S_minimal.fill (NAN); }
+    ConstraintZYXRotationalSubspace (const Matrix3 & subspace) : S_minimal (subspace) {}
+    
+    Matrix3 & operator() () { return S_minimal; }
+    const Matrix3 & operator() () const { return S_minimal; }
+    
+    Matrix3 & matrix () { return S_minimal; }
+    const Matrix3 & matrix () const { return S_minimal; }
+    
+    int nv_impl() const { return NV; }
+    
+    struct ConstraintTranspose
     {
-      enum { NV = 3, Options = 0 };
-      typedef _Scalar Scalar;
-      typedef Eigen::Matrix <_Scalar,3,3,_Options> Matrix3;
-      typedef Eigen::Matrix <_Scalar,3,1,_Options> Vector3;
-      typedef Eigen::Matrix <_Scalar,6,3,_Options> ConstraintDense;
-
-      Matrix3 S_minimal;
-
-      Motion operator* (const MotionSpherical & vj) const
-      { return Motion (Motion::Vector3::Zero (), S_minimal * vj ()); }
-
-      ConstraintRotationalSubspace () : S_minimal () { S_minimal.fill (NAN); }
-      ConstraintRotationalSubspace (const Matrix3 & subspace) : S_minimal (subspace) {}
-
-      Matrix3 & operator() () { return S_minimal; }
-      const Matrix3 & operator() () const { return S_minimal; }
-
-      Matrix3 & matrix () { return S_minimal; }
-      const Matrix3 & matrix () const { return S_minimal; }
-
-      int nv_impl() const { return NV; }
-
-      struct ConstraintTranspose
+      const ConstraintZYXRotationalSubspace & ref;
+      ConstraintTranspose(const ConstraintZYXRotationalSubspace & ref) : ref(ref) {}
+      
+      
+      const typename Eigen::ProductReturnType<
+      Eigen::Transpose<const Matrix3>,
+      //        typename Motion::ConstAngular_t::Base /* This feature leads currently to a bug */
+      Eigen::Block<const typename Force::Vector6,3,1>
+      >::Type
+      operator* (const Force & phi) const
       {
-        const ConstraintRotationalSubspace & ref;
-        ConstraintTranspose(const ConstraintRotationalSubspace & ref) : ref(ref) {}
-
-
-        const typename Eigen::ProductReturnType<
-        Eigen::Transpose<const Matrix3>,
-//        typename Motion::ConstAngular_t::Base /* This feature leads currently to a bug */
-        Eigen::Block<const typename Force::Vector6,3,1>
-        >::Type
-        operator* (const Force & phi) const
-        {
-          return ref.S_minimal.transpose () * phi.angular();
-        }
-
-        /* [CRBA]  MatrixBase operator* (Constraint::Transpose S, ForceSet::Block) */
-        template<typename D>
-        const typename Eigen::ProductReturnType<
-        typename Eigen::Transpose<const Matrix3>,
-        typename Eigen::MatrixBase<const D>::template NRowsBlockXpr<3>::Type
-        >::Type
-        operator* (const Eigen::MatrixBase<D> & F) const
-        {
-          EIGEN_STATIC_ASSERT(D::RowsAtCompileTime==6,THIS_METHOD_IS_ONLY_FOR_MATRICES_OF_A_SPECIFIC_SIZE)
-          return ref.S_minimal.transpose () * F.template bottomRows<3> ();
-        }
-      }; // struct ConstraintTranspose
-
-      ConstraintTranspose transpose () const { return ConstraintTranspose(*this); }
-
-      operator ConstraintXd () const
-      {
-        ConstraintDense S;
-        (S.template block <3,3> (Inertia::LINEAR, 0)).setZero ();
-        S.template block <3,3> (Inertia::ANGULAR, 0) = S_minimal;
-        return ConstraintXd(S);
+        return ref.S_minimal.transpose () * phi.angular();
       }
-
-//      const typename Eigen::ProductReturnType<
-//      const ConstraintDense,
-//      const Matrix3
-//      >::Type
-      Eigen::Matrix <Scalar,6,3, Options>
-      se3Action (const SE3 & m) const
+      
+      /* [CRBA]  MatrixBase operator* (Constraint::Transpose S, ForceSet::Block) */
+      template<typename D>
+      const typename Eigen::ProductReturnType<
+      typename Eigen::Transpose<const Matrix3>,
+      typename Eigen::MatrixBase<const D>::template NRowsBlockXpr<3>::Type
+      >::Type
+      operator* (const Eigen::MatrixBase<D> & F) const
       {
-//        Eigen::Matrix <Scalar,6,3,Options> X_subspace;
-//        X_subspace.template block <3,3> (Motion::LINEAR, 0) = skew (m.translation ()) * m.rotation ();
-//        X_subspace.template block <3,3> (Motion::ANGULAR, 0) = m.rotation ();
-//
-//        return (X_subspace * S_minimal).eval();
-        
-        Eigen::Matrix <Scalar,6,3,Options> result;
-        result.template block <3,3> (Motion::ANGULAR, 0) = m.rotation () * S_minimal;
-        for (int k = 0; k < 3; ++k)
-          result.template block <3,3> (Motion::LINEAR, 0).col(k) =
-          m.translation ().cross(result.template block <3,3> (Motion::ANGULAR, 0).col(k));
-                                 
-        return result;
+        EIGEN_STATIC_ASSERT(D::RowsAtCompileTime==6,THIS_METHOD_IS_ONLY_FOR_MATRICES_OF_A_SPECIFIC_SIZE)
+        return ref.S_minimal.transpose () * F.template bottomRows<3> ();
       }
-
-    }; // struct ConstraintRotationalSubspace
-
-    template<typename D>
-    friend Motion operator* (const ConstraintRotationalSubspace & S, const Eigen::MatrixBase<D> & v)
+    }; // struct ConstraintTranspose
+    
+    ConstraintTranspose transpose () const { return ConstraintTranspose(*this); }
+    
+    operator ConstraintXd () const
     {
-      EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(D,3);
-      return Motion (Motion::Vector3::Zero (), S () * v);
+      ConstraintDense S;
+      (S.template block <3,3> (Inertia::LINEAR, 0)).setZero ();
+      S.template block <3,3> (Inertia::ANGULAR, 0) = S_minimal;
+      return ConstraintXd(S);
     }
-
-  }; // struct JointSphericalZYX
+    
+    //      const typename Eigen::ProductReturnType<
+    //      const ConstraintDense,
+    //      const Matrix3
+    //      >::Type
+    template<typename SE3Scalar, int SE3Options>
+    SE3ActionReturnType SE3ActOn(const SE3Tpl<SE3Scalar,SE3Options> & M) const
+    {
+      //        Eigen::Matrix <Scalar,6,3,Options> X_subspace;
+      //        X_subspace.template block <3,3> (Motion::LINEAR, 0) = skew (m.translation ()) * m.rotation ();
+      //        X_subspace.template block <3,3> (Motion::ANGULAR, 0) = m.rotation ();
+      //
+      //        return (X_subspace * S_minimal).eval();
+      
+      SE3ActionReturnType result;
+      result.template block <3,3> (Motion::ANGULAR, 0) = M.rotation () * S_minimal;
+      for (int k = 0; k < 3; ++k)
+        result.template middleRows<3> (Motion::LINEAR).col(k) =
+        M.translation ().cross(result.template middleRows<3> (Motion::ANGULAR).col(k));
+      
+      return result;
+    }
+    
+  }; // struct ConstraintZYXRotationalSubspace
 
   typedef JointSphericalZYXTpl<double,0> JointSphericalZYX;
 
@@ -206,7 +390,7 @@ namespace se3
 //  >::Type
   Eigen::Matrix <_Scalar,6,3,_Options>
   operator* (const InertiaTpl<_Scalar,_Options> & Y,
-             const typename JointSphericalZYXTpl<_Scalar,_Options>::ConstraintRotationalSubspace & S)
+             const typename JointSphericalZYXTpl<_Scalar,_Options>::ConstraintZYXRotationalSubspace & S)
   {
     Eigen::Matrix < _Scalar, 6, 3, _Options > M;
     M.template topRows<3>() = alphaSkew ( -Y.mass (),  Y.lever () );
@@ -222,26 +406,27 @@ namespace se3
   template <typename _Scalar, int _Options>
   typename Eigen::ProductReturnType<
   const Eigen::Block<const Inertia::Matrix6,6,3>,
-  const typename JointSphericalZYXTpl<_Scalar,_Options>::ConstraintRotationalSubspace::Matrix3
+  const typename JointSphericalZYXTpl<_Scalar,_Options>::ConstraintZYXRotationalSubspace::Matrix3
   >::Type
   operator*(const typename InertiaTpl<_Scalar,_Options>::Matrix6 & Y,
-            const typename JointSphericalZYXTpl<_Scalar,_Options>::ConstraintRotationalSubspace & S)
+            const typename JointSphericalZYXTpl<_Scalar,_Options>::ConstraintZYXRotationalSubspace & S)
   {
     return Y.template block<6,3> (0,Inertia::ANGULAR,0,3) * S.S_minimal;
   }
+  
 
-  namespace internal
-  {
-    template<>
-    struct ActionReturn<JointSphericalZYX::ConstraintRotationalSubspace >
-    {
-//      typedef const typename Eigen::ProductReturnType<
-//      Eigen::Matrix <double,6,3,0>,
-//      Eigen::Matrix <double,3,3,0>
-//      >::Type Type;
-      typedef Eigen::Matrix <double,6,3,0> Type;
-    };
-  }
+//  namespace internal
+//  {
+//    template<>
+//    struct ActionReturn<JointSphericalZYX::ConstraintZYXRotationalSubspace >
+//    {
+////      typedef const typename Eigen::ProductReturnType<
+////      Eigen::Matrix <double,6,3,0>,
+////      Eigen::Matrix <double,3,3,0>
+////      >::Type Type;
+//      typedef Eigen::Matrix <double,6,3,0> Type;
+//    };
+//  }
 
   template<>
   struct traits<JointSphericalZYX>
@@ -252,10 +437,10 @@ namespace se3
     };
     typedef JointDataSphericalZYX JointData;
     typedef JointModelSphericalZYX JointModel;
-    typedef JointSphericalZYX::ConstraintRotationalSubspace Constraint_t;
+    typedef JointSphericalZYX::ConstraintZYXRotationalSubspace Constraint_t;
     typedef SE3 Transformation_t;
     typedef JointSphericalZYX::MotionSpherical Motion_t;
-    typedef JointSphericalZYX::BiasSpherical Bias_t;
+    typedef JointSphericalZYX::MotionSpherical Bias_t;
     typedef Eigen::Matrix<double,6,NV> F_t;
     
     // [ABA]
@@ -369,13 +554,13 @@ namespace se3
     
     void calc_aba(JointData & data, Inertia::Matrix6 & I, const bool update_I) const
     {
-      data.U = I.middleCols<3> (Inertia::ANGULAR) * data.S.matrix();
+      data.U.noalias() = I.middleCols<3> (Inertia::ANGULAR) * data.S.matrix();
       Inertia::Matrix3 tmp (data.S.matrix().transpose() * data.U.middleRows<3> (Inertia::ANGULAR));
       data.Dinv = tmp.inverse();
-      data.UDinv = data.U * data.Dinv;
+      data.UDinv.noalias() = data.U * data.Dinv;
       
       if (update_I)
-        I -= data.UDinv * data.U.transpose();
+        I.noalias() -= data.UDinv * data.U.transpose();
     }
 
     ConfigVector_t integrate_impl(const Eigen::VectorXd & qs,const Eigen::VectorXd & vs) const

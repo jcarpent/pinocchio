@@ -56,7 +56,7 @@ namespace se3
        * with m, and iF, jF are matrices whose columns are forces. The resolution
        * is done by block operation. It is less efficient than the colwise
        * operation and should not be used. */ 
-      static void run( const SE3 & m, 
+      inline static void run( const SE3 & m,
 		       const Eigen::MatrixBase<Mat> & iF,
 		       Eigen::MatrixBase<MatRet> & jF );
       // {
@@ -76,45 +76,89 @@ namespace se3
     {
       /* Compute jF = jXi * iF, where jXi is the dual action matrix associated with m,
        * and iF, jF are vectors. */
-      static void run( const SE3 & m, 
-		       const Eigen::MatrixBase<Mat> & iF,
-		       Eigen::MatrixBase<MatRet> & jF )
+      inline static void run(const SE3 & m,
+                             const Eigen::MatrixBase<Mat> & iF,
+                             Eigen::MatrixBase<MatRet> & jF)
       { 
-	EIGEN_STATIC_ASSERT_VECTOR_ONLY(Mat);
-	EIGEN_STATIC_ASSERT_VECTOR_ONLY(MatRet);
-	Eigen::VectorBlock<const Mat,3> linear = iF.template head<3>();
-	Eigen::VectorBlock<const Mat,3> angular = iF.template tail<3>();
+        EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(Mat,6);
+        EIGEN_STATIC_ASSERT_SAME_VECTOR_SIZE(Mat,MatRet);
+        Eigen::VectorBlock<const Mat,3> linear = iF.template head<3>();
+        Eigen::VectorBlock<const Mat,3> angular = iF.template tail<3>();
 	
-	jF.template head <3>() = m.rotation()*linear;
-	jF.template tail <3>() = (m.translation().cross(jF.template head<3>())
-				  + m.rotation()*angular);
+        jF.template head <3>() = m.rotation()*linear;
+        jF.template tail <3>() = m.translation().cross(jF.template head<3>()) + m.rotation()*angular;
+//        jF.template tail <3>() += m.rotation()*angular;
       }
+    };
+    
+    template<typename Mat,typename MatRet>
+    struct ForceSetSe3Action<Mat,MatRet,Eigen::Dynamic>
+    {
+      /* Compute jF = jXi * iF, where jXi is the dual action matrix associated with m,
+       * and iF, jF are vectors. */
+      inline static void run(const SE3 & m,
+                             const Eigen::MatrixBase<Mat> & iF,
+                             Eigen::MatrixBase<MatRet> & jF)
+      {
+        assert(iF.cols() == jF.cols());
+        long const ncols = iF.cols();
+        for(long col=0;col<ncols;++col)
+        {
+          typename MatRet::ColXpr jFc = jF.col(col);
+          forceSet::se3Action(m,iF.col(col),jFc);
+        }
+      }
+      
     };
 
     /* Specialized implementation of block action, using colwise operation.  It
      * is empirically much faster than the true block operation, although I do
      * not understand why. */
+    
     template<typename Mat,typename MatRet,int NCOLS>
-    void ForceSetSe3Action<Mat,MatRet,NCOLS>::
-    run( const SE3 & m, 
-	 const Eigen::MatrixBase<Mat> & iF,
-	 Eigen::MatrixBase<MatRet> & jF )
+    inline  void
+    ForceSetSe3Action<Mat,MatRet,NCOLS>::run(const SE3 & m,
+                                             const Eigen::MatrixBase<Mat> & iF,
+                                             Eigen::MatrixBase<MatRet> & jF)
     {
-      for(int col=0;col<jF.cols();++col) 
-	{
-	  typename MatRet::ColXpr jFc = jF.col(col);
-	  forceSet::se3Action(m,iF.col(col),jFc);
-	}
+//      long const ncols = jF.cls();
+//#pragma clang loop vectorize_width(2)
+//#pragma clang loop interleave_count(2)
+//      long const ncols = iF.cols();
+      
+//      jF.template topRows<3> () = m.rotation () * iF.template topRows<3> ();
+//      jF.template bottomRows<3> () = m.rotation () * iF.template bottomRows<3> ();
+      #pragma clang optimize on
+      for(int col=0;col<NCOLS;++col)
+      {
+        typename MatRet::ColXpr jFc = jF.col(col);
+        forceSet::se3Action(m,iF.col(col),jFc);
+      }
     }
+    
+//    template<typename Mat,typename MatRet>
+//    inline void
+//    ForceSetSe3Action<Mat,MatRet,-1>::run(const SE3 & m,
+//                                          const Eigen::MatrixBase<Mat> & iF,
+//                                          Eigen::MatrixBase<MatRet> & jF)
+//    {
+//      assert(iF.cols() == jF.cols());
+//      long const ncols = jF.cols();
+//      for(int col=0;col<ncols;++col)
+//      {
+////        typename MatRet::ColXpr jFc = jF.col(col);
+//        forceSet::se3Action(m,iF.col(col),jF.col(col));
+//      }
+//    }
 
   } // namespace internal
 
   namespace forceSet
   {
     template<typename Mat,typename MatRet>
-    static void se3Action( const SE3 & m, 
-			   const Eigen::MatrixBase<Mat> & iF,
-			   Eigen::MatrixBase<MatRet> & jF )
+    inline static void se3Action( const SE3 & m,
+                                 const Eigen::MatrixBase<Mat> & iF,
+                                 Eigen::MatrixBase<MatRet> & jF )
     {
       internal::ForceSetSe3Action<Mat,MatRet,Mat::ColsAtCompileTime>::run(m,iF,jF);
     }

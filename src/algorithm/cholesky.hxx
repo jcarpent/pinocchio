@@ -25,7 +25,7 @@ namespace se3
   namespace cholesky
   {
 
-    inline const Eigen::MatrixXd &
+    const Data::MassMatrix &
     decompose(const Model & model,
               Data & data)
     {
@@ -43,8 +43,8 @@ namespace se3
        *    end
        */
       
-      Eigen::MatrixXd & M = data.M;
-      Eigen::MatrixXd & U = data.U;
+      Data::MassMatrix & M = data.M;
+      Data::MassMatrix & U = data.U;
       Eigen::VectorXd & D = data.D;
       
       for(int j=model.nv-1;j>=0;--j )
@@ -85,12 +85,12 @@ namespace se3
     /* Compute U'*v */
     template<typename Mat>
     Mat & Utv(const Model & model,
-              const Data & data,
-              Eigen::MatrixBase<Mat> & v)
+                     const Data & data,
+                     Eigen::MatrixBase<Mat> & v)
     {
       assert(v.rows() == model.nv);
       
-      const Eigen::MatrixXd & U = data.U;
+      const Data::MassMatrix & U = data.U;
       const std::vector<int> & nvt = data.nvSubtree_fromRow;
       for( int k=model.nv-2;k>=0;--k ) // You can start from nv-2 (no child in nv-1)
         v.middleRows(k+1,nvt[(Model::Index)k]-1) += U.row(k).segment(k+1,nvt[(Model::Index)k]-1).transpose()*v.row(k);
@@ -103,14 +103,14 @@ namespace se3
      * in a single loop, so algorithm is not proposed.*/
     template<typename Mat>
     Mat & Uiv(const Model & model,
-              const Data & data ,
-              Eigen::MatrixBase<Mat> & v)
+                     const Data & data ,
+                     Eigen::MatrixBase<Mat> & v)
     {
       /* We search y s.t. v = U y. 
        * For any k, v_k = y_k + U_{k,k+1:} y_{k+1:} */
       assert(v.rows() == model.nv);
       
-      const Eigen::MatrixXd & U = data.U;
+      const Data::MassMatrix & U = data.U;
       const std::vector<int> & nvt = data.nvSubtree_fromRow;
       
       for( int k=model.nv-2;k>=0;--k ) // You can start from nv-2 (no child in nv-1)
@@ -120,14 +120,14 @@ namespace se3
 
     template<typename Mat>
     Mat & Utiv(const Model & model,
-               const Data & data ,
-               Eigen::MatrixBase<Mat> & v)
+                      const Data & data ,
+                      Eigen::MatrixBase<Mat> & v)
     {
       /* We search y s.t. v = U' y. 
        * For any k, v_k = y_k + sum_{m \in parent{k}} U(m,k) v(k). */
       assert(v.rows() == model.nv);
       
-      const Eigen::MatrixXd & U = data.U;
+      const Data::MassMatrix & U = data.U;
       const std::vector<int> & nvt = data.nvSubtree_fromRow;
       for( int k=0;k<model.nv-1;++k ) // You can stop one step before nv.
         v.middleRows(k+1,nvt[(Model::Index)k]-1) -= U.row(k).segment(k+1,nvt[(Model::Index)k]-1).transpose()*v.row(k);
@@ -139,12 +139,12 @@ namespace se3
     {
       template<typename Mat>
       Mat Mv(const Model & model,
-             const Data & data,
-             const Eigen::MatrixBase<Mat> & v)
+                    const Data & data,
+                    const Eigen::MatrixBase<Mat> & v)
       {
         assert(v.rows() == model.nv);
         
-        const Eigen::MatrixXd & M = data.M;
+        const Data::MassMatrix & M = data.M;
         const std::vector<int> & nvt = data.nvSubtree_fromRow;
         Mat res(model.nv);
         
@@ -159,8 +159,8 @@ namespace se3
       
       template<typename Mat>
       Mat & UDUtv(const Model & model,
-                  const Data & data,
-                  Eigen::MatrixBase<Mat> & v)
+                         const Data & data,
+                         Eigen::MatrixBase<Mat> & v)
       {
         Utv(model,data,v);
         for( int k=0;k<model.nv;++k ) v.row(k) *= data.D[k];
@@ -170,9 +170,9 @@ namespace se3
     
     template<typename Mat>
     Mat & Mv(const Model & model,
-             const Data & data,
-             Eigen::MatrixBase<Mat> & v,
-             const bool usingCholesky)
+                    const Data & data,
+                    Eigen::MatrixBase<Mat> & v,
+                    const bool usingCholesky)
     {
       if(usingCholesky) return internal::UDUtv(model,data,v);
       else return v = internal::Mv(model,data,v);
@@ -180,8 +180,8 @@ namespace se3
     
     template<typename Mat>
     Mat & solve(const Model & model,
-                const Data & data ,
-                Eigen::MatrixBase<Mat> & v)
+                       const Data & data ,
+                       Eigen::MatrixBase<Mat> & v)
     {
       Uiv(model,data,v);
       for(int k=0;k<model.nv;++k) v.row(k) /= data.D[k];

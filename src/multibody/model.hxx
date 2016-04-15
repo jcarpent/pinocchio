@@ -131,7 +131,7 @@ namespace se3
 
   inline void Model::mergeFixedBody (const JointIndex parent, const SE3 & placement, const Inertia & Y)
   {
-    const Inertia & iYf = Y.se3Action(placement); //TODO
+    const Inertia & iYf = placement.act(Y); //TODO
     inertias[parent] += iYf;
   }
 

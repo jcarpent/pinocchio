@@ -122,7 +122,7 @@ namespace se3
       if(! localFrame )
         J.col(j).topRows<3>() -= lever.cross(J.col(j).bottomRows<3>());
       else
-        J.col(j) = oMframe.actInv(Motion(data.J.col(j))).toVector();
+        J.col(j) = oMframe.actInv(Motion(data.J.col(j))).coeffs();
     }
   }
 

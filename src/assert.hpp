@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2015 CNRS
+// Copyright (c) 2015-2016 CNRS
 //
 // This file is part of Pinocchio
 // Pinocchio is free software: you can redistribute it
@@ -30,16 +30,17 @@ namespace se3
     struct static_assertion<true>
     {
       enum 
-	{
-	  THE_JOINT_MAX_NV_SIZE_IS_EXCEDEED__INCREASE_MAX_JOINT_NV
-	};
+      {
+        THE_JOINT_MAX_NV_SIZE_IS_EXCEDEED__INCREASE_MAX_JOINT_NV,
+        YOU_CALLED_A_METHOD_WHICH_CANNOT_BE_APPLIED
+      };
     };
   } // namespace internat
 
 
 } // namespace se3 
 
-#define SE3_STATIC_ASSERT(CONDITION,MSG)			\
+#define PINOCCHIO_STATIC_ASSERT(CONDITION,MSG)			\
   if(se3::internal::static_assertion<bool(CONDITION)>::MSG) {}
 
 #endif // ifndef __se3_assert_hpp__

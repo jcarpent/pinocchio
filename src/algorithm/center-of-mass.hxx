@@ -152,9 +152,15 @@ namespace se3
 
       data.com[i]  = mass * lever;
       data.mass[i] = mass;
-
+      
       data.vcom[i] = mass * (v.angular().cross(lever) + v.linear());
       data.acom[i] = mass * (a.angular().cross(lever) + a.linear()) + v.angular().cross(data.vcom[i]); // take into accound the coriolis part of the acceleration
+      
+
+//      data.vcom[i] = (v.angular().cross(lever) + v.linear());
+//      data.vcom[i] *= mass;
+//      data.acom[i] = (a.angular().cross(lever) + a.linear()) + v.angular().cross(data.vcom[i]); // take into accound the coriolis part of the acceleration
+//      data.acom[i] *= mass;
     }
     
     // Backward Step
@@ -267,9 +273,12 @@ namespace se3
         = data.mass[i] * Jcols.template topLeftCorner<3,1>()
         - data.com[i].cross(Jcols.template bottomLeftCorner<3,1>()) ;
       else
+      {
         jmodel.jointCols(data.Jcom)
-        = data.mass[i] * Jcols.template topRows<3>()
-        - skew(data.com[i]) * Jcols.template bottomRows<3>();
+        = data.mass[i] * Jcols.template topRows<3>();
+        for(int k=0;k<JointModel::NV;++k)
+          jmodel.jointCols(data.Jcom).col(k) -= data.com[i].cross(Jcols.template bottomRows<3>().col(k));
+      }
     
       if(computeSubtreeComs)
         data.com[i] /= data.mass[i];
@@ -314,7 +323,7 @@ namespace se3
     // I don't know why, but the colwise multiplication is much more faster
     // than the direct Eigen multiplication
     for (long k=0; k<model.nv;++k)
-      data.Jcom.col(k) = oR1_over_m * data.M.topRows<3> ().col(k);
+      data.Jcom.col(k).noalias() = oR1_over_m * data.M.topRows<3> ().col(k);
     return data.Jcom;
   }
 

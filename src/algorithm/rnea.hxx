@@ -51,11 +51,22 @@ namespace se3
       
       data.liMi[i] = model.jointPlacements[i]*jdata.M();
       
-      data.v[i] = jdata.v();
-      if(parent>0) data.v[i] += data.liMi[i].actInv(data.v[parent]);
+      if(parent>0)
+      {
+        data.v[i] = data.liMi[i].actInv(data.v[parent]);
+        data.v[i] += jdata.v();
+      }
+      else
+        data.v[i] = jdata.v();
       
-      data.a_gf[i] = jdata.S()*jmodel.jointVelocitySelector(a) + jdata.c() + (data.v[i] ^ jdata.v()) ;
-      data.a_gf[i] += data.liMi[i].actInv(data.a_gf[parent]);
+//      data.a_gf[i] = data.liMi[i].actInv(data.a_gf[parent]) + jdata.S()*jmodel.jointVelocitySelector(a) + (data.v[i] ^ jdata.v()) + jdata.c();
+      
+//      data.a_gf[i] = data.liMi[i].actInv(data.a_gf[parent]);
+//      data.a_gf[i] += (data.v[i] ^ jdata.v());
+//      data.a_gf[i] += jdata.c() + jdata.S() * jmodel.jointVelocitySelector(a);
+      
+      data.a_gf[i] = data.liMi[i].actInv(data.a_gf[parent]);
+      data.a_gf[i] += jdata.S()*jmodel.jointVelocitySelector(a) + jdata.c() + (data.v[i] ^ jdata.v()) ;
       
       data.f[i] = model.inertias[i]*data.a_gf[i] + model.inertias[i].vxiv(data.v[i]); // -f_ext
     }
@@ -79,13 +90,13 @@ namespace se3
       const Model::JointIndex & i = jmodel.id();
       const Model::JointIndex & parent  = model.parents[i];
       
-      jmodel.jointVelocitySelector(data.tau)  = jdata.S().transpose()*data.f[i];
+      jmodel.jointVelocitySelector(data.tau) = jdata.S().transpose()*data.f[i];
       if(parent>0) data.f[parent] += data.liMi[i].act(data.f[i]);
     }
   };
 
   inline const Eigen::VectorXd&
-  rnea(const Model & model, Data& data,
+  rnea(const Model & model, Data & data,
        const Eigen::VectorXd & q,
        const Eigen::VectorXd & v,
        const Eigen::VectorXd & a)
@@ -105,6 +116,35 @@ namespace se3
                             RneaBackwardStep::ArgsType(model,data));
     }
 
+    return data.tau;
+  }
+  
+  inline const Eigen::VectorXd &
+  rnea(const Model & model,
+       Data & data,
+       const Eigen::VectorXd & q,
+       const Eigen::VectorXd & v,
+       const Eigen::VectorXd & a,
+       const std::vector<Force> & f_ext)
+  {
+    assert((int)f_ext.size() == model.nbody && "The number of external forces must be equal to the number of joints in the model.");
+    
+    data.v[0].setZero();
+    data.a_gf[0] = -model.gravity;
+    
+    for( Model::JointIndex i=1;i<(Model::JointIndex)model.nbody;++i )
+    {
+      RneaForwardStep::run(model.joints[i],data.joints[i],
+                           RneaForwardStep::ArgsType(model,data,q,v,a));
+      data.f[i] -= f_ext[i];
+    }
+    
+    for( Model::JointIndex i=(Model::JointIndex)model.nbody-1;i>0;--i )
+    {
+      RneaBackwardStep::run(model.joints[i],data.joints[i],
+                            RneaBackwardStep::ArgsType(model,data));
+    }
+    
     return data.tau;
   }
   
@@ -134,12 +174,12 @@ namespace se3
       data.liMi[i] = model.jointPlacements[i]*jdata.M();
       
       data.v[i] = jdata.v();
-      if(parent>0) data.v[i] += data.liMi[i].actInv(data.v[(size_t) parent]);
+      if(parent>0) data.v[i] += data.liMi[i].actInv(data.v[parent]);
       
       data.a_gf[i]  = jdata.c() + (data.v[i] ^ jdata.v());
-      data.a_gf[i] += data.liMi[i].actInv(data.a_gf[(size_t) parent]);
+      data.a_gf[i] += data.liMi[i].actInv(data.a_gf[parent]);
       
-      data.f[i] = model.inertias[i]*data.a_gf[i] + model.inertias[i].vxiv(data.v[i]); // -f_ext
+      data.f[i] = model.inertias[i]*data.a_gf[i] + model.inertias[i].vxiv(data.v[i]);
     }
     
   };
@@ -162,7 +202,7 @@ namespace se3
       const Model::JointIndex & parent  = model.parents[i];
       
       jmodel.jointVelocitySelector(data.nle)  = jdata.S().transpose()*data.f[i];
-      if(parent>0) data.f[(size_t) parent] += data.liMi[i].act(data.f[i]);
+      if(parent>0) data.f[parent] += data.liMi[i].act(data.f[i]);
     }
   };
   

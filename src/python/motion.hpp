@@ -22,6 +22,7 @@
 #include <eigenpy/eigenpy.hpp>
 #include "pinocchio/spatial/motion.hpp"
 #include "pinocchio/spatial/force.hpp"
+#include "pinocchio/spatial/se3.hpp"
 
 
 namespace eigenpy
@@ -50,6 +51,7 @@ namespace se3
       typedef typename Motion::Vector3 Vector3;
 
       typedef typename eigenpy::UnalignedEquivalent<Motion>::type Motion_fx;
+      typedef SE3PythonVisitor<SE3>::SE3_fx SE3_fx;
       typedef typename Motion_fx::Force Force_fx;
       typedef typename Motion_fx::Matrix3 Matrix3_fx;
       typedef typename Motion_fx::Matrix6 Matrix6_fx;
@@ -78,8 +80,8 @@ namespace se3
         .add_property("vector",&MotionPythonVisitor::getVector,&MotionPythonVisitor::setVector)
         .add_property("np",&MotionPythonVisitor::getVector)
         
-        .def("se3Action",&Motion_fx::se3Action)
-        .def("se3ActionInverse",&Motion_fx::se3ActionInverse)
+        .def("se3Action",&MotionPythonVisitor::SE3ActOn)
+        .def("se3ActionInverse",&MotionPythonVisitor::SE3InvActOn)
         
         .def("setZero",&MotionPythonVisitor::setZero)
         .def("setRandom",&MotionPythonVisitor::setRandom)
@@ -103,8 +105,11 @@ namespace se3
       static Vector3_fx getAngular(const Motion_fx & self) { return self.angular(); }
       static void setAngular(Motion_fx & self, const Vector3_fx & w) { self.angular(w); }
       
-      static Vector6_fx getVector(const Motion_fx & self) { return self.toVector(); }
+      static Vector6_fx getVector(const Motion_fx & self) { return self.coeffs(); }
       static void setVector(Motion_fx & self, const Vector6_fx & v) { self = v; }
+      
+      static Motion_fx SE3ActOn(const Motion_fx & self, const SE3_fx & M) { return self.SE3ActOn(M); }
+      static Motion_fx SE3InvActOn(const Motion_fx & self, const SE3_fx & M) { return self.SE3InvActOn(M); }
       
       static void setZero(Motion_fx & self) { self.setZero(); }
       static void setRandom(Motion_fx & self) { self.setRandom(); }

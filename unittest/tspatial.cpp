@@ -101,35 +101,35 @@ BOOST_AUTO_TEST_CASE ( test_Motion )
 
   // Test .+=.
   Motion bv3 = bv; bv3 += bv2;
-  BOOST_CHECK( bv3.toVector().isApprox(bv_vec+bv2_vec, 1e-12));
+  BOOST_CHECK( bv3.coeffs().isApprox(bv_vec+bv2_vec, 1e-12));
 
   // Test .=V6
   bv3 = bv2_vec;
-  BOOST_CHECK( bv3.toVector().isApprox(bv2_vec, 1e-12));
+  BOOST_CHECK( bv3.coeffs().isApprox(bv2_vec, 1e-12));
 
   // Test constructor from V6
   Motion bv4(bv2_vec);
-  BOOST_CHECK( bv4.toVector().isApprox(bv2_vec, 1e-12));
+  BOOST_CHECK( bv4.coeffs().isApprox(bv2_vec, 1e-12));
 
   // Test action
   Matrix6 aXb = amb;
-  BOOST_CHECK(amb.act(bv).toVector().isApprox(aXb*bv_vec, 1e-12));
+  BOOST_CHECK(amb.act(bv).coeffs().isApprox(aXb*bv_vec, 1e-12));
 
   // Test action inverse
   Matrix6 bXc = bmc;
-  BOOST_CHECK(bmc.actInv(bv).toVector().isApprox(bXc.inverse()*bv_vec, 1e-12));
+  BOOST_CHECK(bmc.actInv(bv).coeffs().isApprox(bXc.inverse()*bv_vec, 1e-12));
 
   // Test double action
   Motion cv = Motion::Random();
   bv = bmc.act(cv);
-  BOOST_CHECK(amb.act(bv).toVector().isApprox(amc.act(cv).toVector(), 1e-12));
+  BOOST_CHECK(amb.act(bv).coeffs().isApprox(amc.act(cv).coeffs(), 1e-12));
 
   // Simple test for cross product vxv
   Motion vxv = bv.cross(bv);
-  BOOST_CHECK_SMALL(vxv.toVector().tail(3).norm(), 1e-3); //previously ensure that (vxv.toVector().tail(3).isMuchSmallerThan(1e-3));
+  BOOST_CHECK_SMALL(vxv.coeffs().tail(3).norm(), 1e-3); //previously ensure that (vxv.coeffs().tail(3).isMuchSmallerThan(1e-3));
 
   // Simple test for cross product vxf
-  Force f = Force(bv.toVector());
+  Force f = Force(bv.coeffs());
   Force vxf = bv.cross(f);
   BOOST_CHECK(vxf.linear().isApprox(bv.angular().cross(f.linear()), 1e-12));
   BOOST_CHECK_SMALL(vxf.angular().norm(), 1e-3);//previously ensure that ( vxf.angular().isMuchSmallerThan(1e-3));
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE ( test_Motion )
   Force bf = amb.actInv(af);
   Force avxf = av.cross(af);
   Force bvxf = bv.cross(bf);
-  BOOST_CHECK(avxf.toVector().isApprox(amb.act(bvxf).toVector(), 1e-12));
+  BOOST_CHECK(avxf.coeffs().isApprox(amb.act(bvxf).coeffs(), 1e-12));
 
   // Test frame change for vxv
   av = Motion::Random();
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE ( test_Motion )
   Motion bw = amb.actInv(aw);
   Motion avxw = av.cross(aw);
   Motion bvxw = bv.cross(bw);
-  BOOST_CHECK(avxw.toVector().isApprox(amb.act(bvxw).toVector(), 1e-12));
+  BOOST_CHECK(avxw.coeffs().isApprox(amb.act(bvxw).coeffs(), 1e-12));
 }
 
 BOOST_AUTO_TEST_CASE ( test_Force )
@@ -179,33 +179,33 @@ BOOST_AUTO_TEST_CASE ( test_Force )
 
   // Test .+=.
   Force bf3 = bf; bf3 += bf2;
-  BOOST_CHECK(bf3.toVector().isApprox(bf_vec+bf2_vec, 1e-12));
+  BOOST_CHECK(bf3.coeffs().isApprox(bf_vec+bf2_vec, 1e-12));
 
   // Test .= V6
   bf3 = bf2_vec;
-  BOOST_CHECK(bf3.toVector().isApprox(bf2_vec, 1e-12));
+  BOOST_CHECK(bf3.coeffs().isApprox(bf2_vec, 1e-12));
 
   // Test constructor from V6
   Force bf4(bf2_vec);
-  BOOST_CHECK(bf4.toVector().isApprox(bf2_vec, 1e-12));
+  BOOST_CHECK(bf4.coeffs().isApprox(bf2_vec, 1e-12));
 
 
   // Test action
   Matrix6 aXb = amb;
-  BOOST_CHECK(amb.act(bf).toVector().isApprox(aXb.inverse().transpose()*bf_vec, 1e-12));
+  BOOST_CHECK(amb.act(bf).coeffs().isApprox(aXb.inverse().transpose()*bf_vec, 1e-12));
 
   // Test action inverse
   Matrix6 bXc = bmc;
-  BOOST_CHECK(bmc.actInv(bf).toVector().isApprox(bXc.transpose()*bf_vec, 1e-12));
+  BOOST_CHECK(bmc.actInv(bf).coeffs().isApprox(bXc.transpose()*bf_vec, 1e-12));
 
   // Test double action
   Force cf = Force::Random();
   bf = bmc.act(cf);
-  BOOST_CHECK(amb.act(bf).toVector().isApprox(amc.act(cf).toVector(), 1e-12));
+  BOOST_CHECK(amb.act(bf).coeffs().isApprox(amc.act(cf).coeffs(), 1e-12));
 
   // Simple test for cross product
   // Force vxv = bf.cross(bf);
-  // ensure that (vxv.toVector().isMuchSmallerThan(bf.toVector()));
+  // ensure that (vxv.coeffs().isMuchSmallerThan(bf.coeffs()));
 }
 
 BOOST_AUTO_TEST_CASE ( test_Inertia )
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE ( test_Inertia )
   // Test motion-to-force map
   Motion v = Motion::Random();
   Force f = I1 * v;
-  BOOST_CHECK(f.toVector().isApprox(v.toVector(), 1e-12)); 
+  BOOST_CHECK(f.coeffs().isApprox(v.coeffs(), 1e-12)); 
   
   // Test Inertia group application
   SE3 bma = SE3::Random(); 
@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE ( test_Inertia )
   f = aI*v;
   Force vxf = v.cross(f);
   Force vxIv = aI.vxiv(v);
-  BOOST_CHECK(vxf.toVector().isApprox(vxIv.toVector(), 1e-12));
+  BOOST_CHECK(vxf.coeffs().isApprox(vxIv.coeffs(), 1e-12));
 
   // Test operator+
   I1 = Inertia::Random();
@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE ( test_Inertia )
   BOOST_CHECK((I1.matrix()+I2.matrix()).isApprox(I12.matrix(), 1e-12));
   
   // Test operator vtiv
-  double kinetic_ref = v.toVector().transpose() * aI.matrix() * v.toVector();
+  double kinetic_ref = v.coeffs().transpose() * aI.matrix() * v.coeffs();
   double kinetic = aI.vtiv(v);
   BOOST_CHECK_SMALL(kinetic_ref - kinetic, 1e-12);
 
@@ -302,13 +302,13 @@ BOOST_AUTO_TEST_CASE ( test_ActOnSet )
   Matrix6N iF = Matrix6N::Random(),jF;
   se3::forceSet::se3Action(jMi,iF,jF);
   for( int k=0;k<N;++k )
-    BOOST_CHECK(jMi.act(se3::Force(iF.col(k))).toVector().isApprox(jF.col(k), 1e-12));
+    BOOST_CHECK(jMi.act(se3::Force(iF.col(k))).coeffs().isApprox(jF.col(k), 1e-12));
     
 
   Matrix6N iV = Matrix6N::Random(),jV;
   se3::motionSet::se3Action(jMi,iV,jV);
   for( int k=0;k<N;++k )
-    BOOST_CHECK(jMi.act(se3::Motion(iV.col(k))).toVector().isApprox(jV.col(k), 1e-12));
+    BOOST_CHECK(jMi.act(se3::Motion(iV.col(k))).coeffs().isApprox(jV.col(k), 1e-12));
 
 }
 
@@ -346,7 +346,7 @@ BOOST_AUTO_TEST_CASE ( test_Explog )
   BOOST_CHECK_SMALL(m2.rotation().determinant() - 1.0, EPSILON);
   Matrix4 M = m2.toHomogeneousMatrix();
   se3::Motion nu2FromLog(se3::log6(M));
-  Vector6 v6FromLog(nu2FromLog.toVector());
+  Vector6 v6FromLog(nu2FromLog.coeffs());
   BOOST_CHECK(v6.isApprox(v6FromLog, EPSILON));
 }
 

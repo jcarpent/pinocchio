@@ -37,15 +37,17 @@ namespace se3
   struct ConstraintIdentity;
 
   template <>
-  struct traits< ConstraintIdentity >
+  struct traits<ConstraintIdentity>
   {
     typedef double Scalar_t;
+    
     typedef Eigen::Matrix<double,3,1,0> Vector3;
     typedef Eigen::Matrix<double,4,1,0> Vector4;
     typedef Eigen::Matrix<double,6,1,0> Vector6;
     typedef Eigen::Matrix<double,3,3,0> Matrix3;
     typedef Eigen::Matrix<double,4,4,0> Matrix4;
     typedef Eigen::Matrix<double,6,6,0> Matrix6;
+    typedef Matrix6 SE3ActionReturnType;
     typedef Matrix3 Angular_t;
     typedef Vector3 Linear_t;
     typedef const Matrix3 ConstAngular_t;
@@ -65,23 +67,34 @@ namespace se3
     typedef Eigen::Matrix<Scalar_t,6,6> DenseBase;
   }; // traits ConstraintRevolute
 
+//  namespace internal
+//  {
+//    template<>
+//    struct ActionReturn<ConstraintIdentity>
+//    { typedef SE3::Matrix6 Type; };
+//  }
 
-    struct ConstraintIdentity : ConstraintBase < ConstraintIdentity >
+    struct ConstraintIdentity : ConstraintBase <ConstraintIdentity>
     {
       SPATIAL_TYPEDEF_NO_TEMPLATE(ConstraintIdentity);
       enum { NV = 6, Options = 0 };
       typedef traits<ConstraintIdentity>::JointMotion JointMotion;
       typedef traits<ConstraintIdentity>::JointForce JointForce;
       typedef traits<ConstraintIdentity>::DenseBase DenseBase;
+      typedef traits<ConstraintIdentity>::SE3ActionReturnType SE3ActionReturnType;
 
-      SE3::Matrix6 se3Action(const SE3 & m) const { return m.toActionMatrix(); }
+      template<typename SE3Scalar, int SE3Options>
+      SE3ActionReturnType SE3ActOn(const SE3Tpl<SE3Scalar,SE3Options> & M) const
+      {
+        return M.toActionMatrix();
+      }
 
       int nv_impl() const { return NV; }
 
       struct TransposeConst 
       {
         Force::Vector6 operator* (const Force & phi)
-        {  return phi.toVector();  }
+        {  return phi.coeffs();  }
       };
       
       TransposeConst transpose() const { return TransposeConst(); }
@@ -119,19 +132,16 @@ namespace se3
   }
 
   /* [CRBA]  MatrixBase operator* (Constraint::Transpose S, ForceSet::Block) */
-  template<typename D>
-  const Eigen::MatrixBase<D> & 
-  operator*( const ConstraintIdentity::TransposeConst &, const Eigen::MatrixBase<D> & F )
+  template<typename EigenDerived>
+  inline const Eigen::MatrixBase<EigenDerived> &
+  operator*(const ConstraintIdentity::TransposeConst &, const Eigen::MatrixBase<EigenDerived> & F )
   {
+    EIGEN_STATIC_ASSERT(EigenDerived::RowsAtCompileTime==6,THIS_METHOD_IS_ONLY_FOR_MATRICES_OF_A_SPECIFIC_SIZE)
     return F;
   }
 
-  namespace internal
-  {
-    template<>
-    struct ActionReturn<ConstraintIdentity >  
-    { typedef SE3::Matrix6 Type; };
-  }
+  
+  
 
   struct JointFreeFlyer;
 

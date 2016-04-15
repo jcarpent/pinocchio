@@ -354,6 +354,8 @@ namespace se3
     typedef Eigen::Matrix<double,3,Eigen::Dynamic> Matrix3x;
     typedef SE3::Vector3 Vector3;
     
+    typedef Eigen::Matrix<double,Eigen::Dynamic,Eigen::Dynamic,0> MassMatrix;
+    
   public:
     /// \brief A const reference to the reference model.
     const Model & model;
@@ -395,7 +397,7 @@ namespace se3
     std::vector<Inertia> Ycrb;
     
     /// \brief The joint space inertia matrix (a square matrix of dim model.nv).
-    Eigen::MatrixXd M;
+    MassMatrix M;
     
     /// \brief The joint accelerations computed from ABA
     Eigen::VectorXd ddq;
@@ -430,7 +432,7 @@ namespace se3
     std::vector<int> nvSubtree;
 
     /// \brief Joint space intertia matrix square root (upper trianglular part) computed with a Cholesky Decomposition.
-    Eigen::MatrixXd U;
+    MassMatrix U;
     
     /// \brief Diagonal of the joint space intertia matrix obtained by a Cholesky Decomposition.
     Eigen::VectorXd D;

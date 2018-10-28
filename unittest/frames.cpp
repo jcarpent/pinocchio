@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(frame_basic)
 {
   using namespace se3;
   Model model;
-  buildModels::humanoidSimple(model);
+  buildModels::humanoidRandom(model);
   
   BOOST_CHECK(model.frames.size() >= size_t(model.njoints));
   for(Model::FrameVector::const_iterator it = model.frames.begin();
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE ( test_jacobian )
   BOOST_CHECK(frame.placement.isApprox_impl(framePlacement));
   Data::Matrix6x Jjj(6,model.nv); Jjj.fill(0);
   Data::Matrix6x Jff(6,model.nv); Jff.fill(0);
-  getFrameJacobian(model,data,idx,Jff);
+  getFrameJacobian(model, data,     idx,        LOCAL, Jff);
   getJointJacobian(model, data_ref, parent_idx, LOCAL, Jjj);
 
   Motion nu_frame = Motion(Jff*q_dot);

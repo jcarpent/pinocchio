@@ -1,7 +1,7 @@
 name: eigenpy
 channels:
   - conda-forge
-  - defaults
+  - nodefaults
 dependencies:
   - eigen
   - cmake

@@ -38,7 +38,6 @@ jobs:
         pushd build
 
         set PKG_CONFIG_PATH=%CONDA_PREFIX%\Library\share\pkgconfig:%CONDA_PREFIX%\Library\share\pkgconfig
-        set CMAKE_PREFIX_PATH=%%CONDA_PREFIX%
         cmake ^
           -G"Visual Studio 16 2019"  -A x64  -T"ClangCl" ^
           -DCMAKE_INSTALL_PREFIX=%CONDA_PREFIX%\Library ^

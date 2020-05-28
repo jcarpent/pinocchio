@@ -12,7 +12,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-          os: [windows-latest]
+        name: [windows-latest-clang-cl]
+
+        include:
+          - name: windows-latest-clang-cl
+            os: windows-2019
+            compiler: clang-cl
+
     steps:
     - uses: actions/checkout@v2
     - name: Checkout submodules

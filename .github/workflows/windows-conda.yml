@@ -24,6 +24,9 @@ jobs:
     - name: Checkout submodules
       run: |
         git submodule update --init
+        pushd "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\Llvm\bin"
+        set PATH="C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\Llvm\bin":%PATH%
+        ./clang-cl.exe --version
     - uses: goanpeca/setup-miniconda@v1
       with:
         activate-environment: pinocchio
@@ -37,15 +40,23 @@ jobs:
         set BOOST_ROOT_1_69_0=
         set BOOST_ROOT_1_72_0=
         set PATH=%PATH:C:\hostedtoolcache\windows\Boost\1.72.0;=%
+        
+        where cmake
+        del C:\Miniconda\envs\pinocchio\Library\bin\cmake.exe
+        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\vsdevcmd.bat"
+        echo %PATH%
+        dir "%programfiles(x86)%\Microsoft Visual Studio\2019\Enterprise\VC\Tools"
+        dir "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\Llvm\bin"
+        set PATH="C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\Llvm\bin":%PATH%
+        echo %PATH%
     
         :: start building
-        call "%programfiles(x86)%\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" amd64
         mkdir build
         pushd build
 
         set PKG_CONFIG_PATH=%CONDA_PREFIX%\Library\share\pkgconfig:%CONDA_PREFIX%\Library\share\pkgconfig
         cmake ^
-          -G "Visual Studio 16 2019" -T "v142" -DCMAKE_GENERATOR_PLATFORM=x64 ^
+          -G "Visual Studio 16 2019" -T "ClangCl" -DCMAKE_GENERATOR_PLATFORM=x64 ^
           -DCMAKE_INSTALL_PREFIX=%CONDA_PREFIX%\Library ^
           -DCMAKE_BUILD_TYPE=Release ^
           -DPYTHON_EXECUTABLE=%CONDA_PREFIX%\python.exe ^

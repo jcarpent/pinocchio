@@ -42,8 +42,9 @@ jobs:
           -G "Visual Studio 16 2019" -T "v142" -DCMAKE_GENERATOR_PLATFORM=x64 ^
           -DCMAKE_INSTALL_PREFIX=%CONDA_PREFIX%\Library ^
           -DCMAKE_BUILD_TYPE=Release ^
-          -DPINOCCHIO_SITELIB_ROOT=%CONDA_PREFIX% ^
           -DPYTHON_EXECUTABLE=%CONDA_PREFIX%\python.exe ^
+          -DBUILD_WITH_URDF_SUPPORT=ON -DBUILD_PYTHON_INTERFACE=ON ^
+          -DCMAKE_CXX_FLAGS="/EHsc /bigobj" ^
           ..
         cmake --build . --config Release --target install
         ctest --output-on-failure

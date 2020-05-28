@@ -36,15 +36,14 @@ jobs:
         call "%programfiles(x86)%\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" amd64
         mkdir build
         pushd build
-        dir %CONDA_PREFIX%\Library\pkgconfig
-        dir %CONDA_PREFIX%\Library\share\pkgconfig
 
         set PKG_CONFIG_PATH=%CONDA_PREFIX%\Library\share\pkgconfig:%CONDA_PREFIX%\Library\share\pkgconfig
+        set CMAKE_PREFIX_PATH=%%CONDA_PREFIX%
         cmake ^
           -G"Visual Studio 16 2019"  -A x64  -T"ClangCl" ^
           -DCMAKE_INSTALL_PREFIX=%CONDA_PREFIX%\Library ^
           -DCMAKE_BUILD_TYPE=Release ^
-          -DEIGENPY_SITELIB_ROOT=%CONDA_PREFIX% ^
+          -DPINOCCHIO_SITELIB_ROOT=%CONDA_PREFIX% ^
           -DPYTHON_EXECUTABLE=%CONDA_PREFIX%\python.exe ^
           ..
         cmake --build . --config Release --target install

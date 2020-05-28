@@ -1,4 +1,4 @@
-name: eigenpy
+name: pinocchio
 channels:
   - conda-forge
   - nodefaults

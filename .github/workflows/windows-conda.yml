@@ -21,6 +21,7 @@ jobs:
     - uses: goanpeca/setup-miniconda@v1
       with:
         activate-environment: pinocchio
+        miniconda-version: 'latest'
         environment-file: .github/workflows/conda-env.yml
         python-version: 3.7
     - name: Build Pinocchio

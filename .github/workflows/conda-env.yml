@@ -6,7 +6,6 @@ dependencies:
   - eigen
   - cmake
   - numpy
-  - pkg-config
   - boost
   - eigenpy
   - urdfdom

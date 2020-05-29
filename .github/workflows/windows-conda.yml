@@ -35,6 +35,7 @@ jobs:
     - name: Install cmake and update conda
       run: |
         conda install cmake -c main
+        Start-Process -Wait -FilePath  "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installershell.exe" -ArgumentList "update --passive --norestart --installpath ""C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise"""
     
     - name: Build Pinocchio
       shell: cmd /C CALL {0}

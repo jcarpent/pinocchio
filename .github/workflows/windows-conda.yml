@@ -24,9 +24,6 @@ jobs:
     - name: Checkout submodules
       run: |
         git submodule update --init
-        pushd "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\Llvm\bin"
-        set PATH="C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\Llvm\bin":%PATH%
-        ./clang-cl.exe --version
     - uses: goanpeca/setup-miniconda@v1
       with:
         activate-environment: pinocchio
@@ -35,7 +32,6 @@ jobs:
     - name: Install cmake and update conda
       run: |
         conda install cmake -c main
-        Start-Process -Wait -FilePath  "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installershell.exe" -ArgumentList "update --passive --norestart --installpath ""C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise"""
     
     - name: Build Pinocchio
       shell: cmd /C CALL {0}
@@ -45,13 +41,11 @@ jobs:
         set BOOST_ROOT_1_69_0=
         set BOOST_ROOT_1_72_0=
         set PATH=%PATH:C:\hostedtoolcache\windows\Boost\1.72.0;=%
+
+        conda list
         
-        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\vsdevcmd.bat"
-        echo %PATH%
-        dir "%programfiles(x86)%\Microsoft Visual Studio\2019\Enterprise\VC\Tools"
-        dir "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\Llvm\bin"
-        set PATH="C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Tools\Llvm\bin":%PATH%
-        echo %PATH%
+        call "%programfiles(x86)%\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" amd64
+        type C:\Miniconda\envs\pinocchio\Library\include\urdf_sensor\sensor.h
     
         :: start building
         mkdir build

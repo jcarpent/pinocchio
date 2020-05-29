@@ -34,7 +34,6 @@ jobs:
         python-version: 3.7
     - name: Install cmake and update conda
       run: |
-        conda update -n base -c defaults conda
         conda install cmake -c main
     
     - name: Build Pinocchio
